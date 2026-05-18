@@ -14,31 +14,38 @@
 </section>
 
 <!-- Filter Section -->
-<section class="glass-panel p-md rounded-xl flex flex-col md:flex-row gap-md items-end">
+<form action="{{ route('audit.trail') }}" method="GET" class="glass-panel p-md rounded-xl flex flex-col md:flex-row gap-md items-end">
+    
     <div class="flex-1 w-full flex flex-col gap-xs">
         <label class="font-label-bold text-on-surface-variant text-[11px] uppercase tracking-wider ml-1">Rentang Waktu</label>
-        <input type="date" class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface font-body-sm rounded-lg px-3 py-2 outline-none focus:border-primary">
+        <input type="date" name="tanggal" value="{{ request('tanggal') }}" class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface font-body-sm rounded-lg px-3 py-2 outline-none focus:border-primary">
     </div>
+    
     <div class="flex-1 w-full flex flex-col gap-xs">
         <label class="font-label-bold text-on-surface-variant text-[11px] uppercase tracking-wider ml-1">Modul / Jenis</label>
-        <select class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface font-body-sm rounded-lg px-3 py-2 outline-none focus:border-primary">
-            <option>Semua Aktivitas</option>
-            <option>Autentikasi (Login/Logout)</option>
-            <option>Barang Masuk / Keluar</option>
-            <option>Perubahan Master Data</option>
+        <select name="modul" class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface font-body-sm rounded-lg px-3 py-2 outline-none focus:border-primary">
+            <option value="Semua Aktivitas">Semua Aktivitas</option>
+            <option value="masuk" {{ request('modul') == 'masuk' ? 'selected' : '' }}>Stok Masuk</option>
+            <option value="keluar" {{ request('modul') == 'keluar' ? 'selected' : '' }}>Stok Keluar</option>
         </select>
     </div>
+    
     <div class="flex-1 w-full flex flex-col gap-xs">
         <label class="font-label-bold text-on-surface-variant text-[11px] uppercase tracking-wider ml-1">Operator</label>
-        <select class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface font-body-sm rounded-lg px-3 py-2 outline-none focus:border-primary">
-            <option>Semua Operator</option>
-            <option>Admin_Gudang1</option>
-            <option>SuperAdmin</option>
-            <option>Op_Shift_Malam</option>
+        <select name="operator" class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface font-body-sm rounded-lg px-3 py-2 outline-none focus:border-primary">
+            <option value="Semua Operator">Semua Operator</option>
+            @foreach($users as $user)
+                <option value="{{ $user->id }}" {{ request('operator') == $user->id ? 'selected' : '' }}>
+                    {{ $user->name }}
+                </option>
+            @endforeach
         </select>
     </div>
-    <button class="w-full md:w-auto px-lg py-2 bg-primary text-on-primary font-label-bold rounded-lg hover:brightness-110 active:scale-95 transition-all">Terapkan</button>
-</section>
+    
+    <button type="submit" class="w-full md:w-auto px-lg py-2 bg-primary text-on-primary font-label-bold rounded-lg hover:brightness-110 active:scale-95 transition-all">
+        Terapkan
+    </button>
+</form>
 
 <!-- Audit Timeline / Table -->
 <section class="glass-panel rounded-xl overflow-hidden flex flex-col mt-lg">

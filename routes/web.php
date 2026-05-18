@@ -29,7 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/items/{id}', [ItemController::class, 'destroy'])->name('items.destroy');
     Route::get('/ops', [InventoryOpsController::class, 'index']);
     Route::get('/alerts', [AlertController::class, 'index']);
-    Route::get('/audit-trail', [AuditController::class, 'index']);
+    Route::get('/audit-trail', [AuditController::class, 'index'])->name('audit.trail');
     Route::get('/reports', [ReportController::class, 'index']);
     Route::get('/settings', [SettingController::class, 'index']);
     Route::resource('kategori', KategoriController::class);

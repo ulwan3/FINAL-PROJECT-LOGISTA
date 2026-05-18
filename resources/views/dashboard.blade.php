@@ -181,6 +181,22 @@
         document.getElementById('modalPesanan').classList.add('hidden');
         document.body.style.overflow = 'auto';
     }
+
+    function closeRestockAlert() {
+        const alertDiv = document.querySelector('.mb-lg.p-md.rounded-xl');
+        if(alertDiv) alertDiv.remove();
+        
+        // Hapus parameter URL
+        if (window.history.replaceState) {
+            let url = new URL(window.location.href);
+            url.searchParams.delete('restock_id');
+            url.searchParams.delete('restock_name');
+            url.searchParams.delete('restock_min');
+            url.searchParams.delete('restock_satuan');
+            window.history.replaceState({}, document.title, url.toString());
+        }
+    }
+
     window.onclick = function(event) {
         let modal = document.getElementById('modalPesanan');
         if (event.target == modal) closeModalPesanan();

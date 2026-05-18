@@ -3,9 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaksi;
-use App\Models\Barang;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -22,37 +20,10 @@ class ReportController extends Controller
             ->whereYear('created_at', now()->year)
             ->sum('jumlah');
         
-        // Hitung total transaksi (untuk cek apakah ada data)
-        $totalTransaksi = Transaksi::count();
-        
         // Data untuk grafik (4 minggu terakhir)
         $chartData = $this->getChartData();
         
-        // DATA REAL: Top 5 Barang Paling Sering Keluar (Bulan Ini)
-        $topBarangKeluar = Transaksi::where('jenis', 'keluar')
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
-            ->select('barang_id', DB::raw('SUM(jumlah) as total_keluar'))
-            ->with('barang')
-            ->groupBy('barang_id')
-            ->orderBy('total_keluar', 'desc')
-            ->limit(5)
-            ->get()
-            ->map(function($item) {
-                return (object) [
-                    'nama_barang' => $item->barang->nama_barang ?? 'Barang Tidak Dikenal',
-                    'total_keluar' => $item->total_keluar,
-                    'satuan' => $item->barang->satuan ?? 'pcs'
-                ];
-            });
-        
-        return view('reports.index', compact(
-            'masuk', 
-            'keluar', 
-            'totalTransaksi', 
-            'chartData',
-            'topBarangKeluar'
-        ));
+        return view('reports.index', compact('masuk', 'keluar', 'chartData'));
     }
     
     private function getChartData()
@@ -63,10 +34,12 @@ class ReportController extends Controller
             'keluar' => [0, 0, 0, 0]
         ];
         
+        // Jika tidak ada data sama sekali, kembalikan array kosong (0)
         if (Transaksi::count() == 0) {
             return $data;
         }
         
+        // Hitung per minggu (4 minggu terakhir)
         for ($i = 3; $i >= 0; $i--) {
             $startDate = now()->subWeeks($i)->startOfWeek();
             $endDate = now()->subWeeks($i)->endOfWeek();
