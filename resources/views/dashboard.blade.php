@@ -144,27 +144,34 @@
 
         <form action="{{ route('transaksi.store') }}" method="POST" class="space-y-4">
             @csrf
+            
             <div>
                 <label class="block text-[11px] text-on-surface-variant mb-2 uppercase font-label-bold">Pilih Barang</label>
-                <select name="barang_id" class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none">
-                    @foreach(\App\Models\Barang::all() as $b)
-                        <option value="{{ $b->id }}">{{ $b->nama_barang }} (Stok: {{ $b->stok }})</option>
+                <select name="barang_id" required class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none cursor-pointer">
+                    <option value="" disabled selected>-- Pilih Barang --</option>
+                    @foreach($barangs as $b)
+                        <option value="{{ $b->id }}">
+                            [{{ $b->kode_barang }}] {{ strtoupper($b->nama_barang) }} (Stok: {{ $b->stok }} {{ $b->satuan ?? 'pcs' }})
+                        </option>
                     @endforeach
                 </select>
             </div>
+
             <div>
                 <label class="block text-[11px] text-on-surface-variant mb-2 uppercase font-label-bold">Pilih Supplier</label>
-                <select name="supplier_id" class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none">
+                <select name="supplier_id" class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none cursor-pointer">
                     <option value="">-- Pilih Supplier --</option>
                     @foreach($suppliers as $supplier)
                         <option value="{{ $supplier->id }}">{{ $supplier->nama_supplier }}</option>
                     @endforeach
                 </select>
             </div>
+
             <div>
                 <label class="block text-[11px] text-on-surface-variant mb-2 uppercase font-label-bold">Jumlah Pesanan</label>
                 <input type="number" name="jumlah" min="1" required class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface rounded-lg px-4 py-2 outline-none">
             </div>
+
             <button type="submit" class="w-full bg-primary text-on-primary py-3 rounded-xl font-label-bold hover:brightness-110 active:scale-95 transition-all">
                 Buat Pesanan Sekarang
             </button>

@@ -1,14 +1,11 @@
 @extends('layouts.app')
 
-
-
 @section('content')
 <section class="flex flex-col gap-sm">
     <h2 class="font-headline-md text-on-surface">Master Items (Data Barang)</h2>
     <p class="font-body-sm text-on-surface-variant">Kelola daftar barang, kategori, dan batas minimum stok gudang.</p>
 </section>
 
-<!-- Data Toolbar: Kategori Tabs + Filter/Tambah -->
 <section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md glass-panel p-md rounded-xl">
     <div class="flex flex-wrap gap-sm">
         {{-- Tab "Semua" --}}
@@ -17,31 +14,31 @@
            {{ !request('kategori') && !request('status') ? 'bg-primary-container text-on-primary-container border-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high border-transparent' }}">
             Semua ({{ $totalBarang }})
         </a>
-        {{-- Tabs Kategori Dinamis --}}{{-- Tab per Kategori --}}
-            @foreach($kategoris as $kategori)
-                <div class="relative flex items-center group">
-                    {{-- Link Filter (Kotak Utama) --}}
-                    <a href="{{ route('items.index', array_merge(request()->query(), ['kategori' => $kategori->id, 'page' => 1])) }}"
-                        class="px-md py-2 text-body-sm font-label-bold rounded-lg border transition-all flex items-center gap-3
-                        {{ request('kategori') == $kategori->id 
-                            ? 'bg-primary text-on-primary border-primary shadow-md'
-                            : 'bg-surface-container-high text-on-surface-variant border-outline-variant/30 hover:border-primary/50' }}">
-                        
-                        <span>{{ strtoupper($kategori->nama) }}</span>
+        {{-- Tabs Kategori Dinamis --}}
+        @foreach($kategoris as $kategori)
+            <div class="relative flex items-center group">
+                {{-- Link Filter (Kotak Utama) --}}
+                <a href="{{ route('items.index', array_merge(request()->query(), ['kategori' => $kategori->id, 'page' => 1])) }}"
+                    class="px-md py-2 text-body-sm font-label-bold rounded-lg border transition-all flex items-center gap-3
+                    {{ request('kategori') == $kategori->id 
+                        ? 'bg-primary text-on-primary border-primary shadow-md'
+                        : 'bg-surface-container-high text-on-surface-variant border-outline-variant/30 hover:border-primary/50' }}">
+                    
+                    <span>{{ strtoupper($kategori->nama) }}</span>
 
-                        {{-- Tombol X Kecil --}}
-                        <form action="{{ route('kategori.destroy', $kategori->id) }}" method="POST" 
-                            onsubmit="return confirm('Yakin ingin menghapus kategori ini?')" 
-                            class="inline-flex items-center">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="hover:bg-error/20 hover:text-error rounded-full p-0.5 transition-colors flex items-center justify-center">
-                                <span class="material-symbols-outlined text-[14px]">close</span>
-                            </button>
-                        </form>
-                    </a>
-                </div>
-            @endforeach
+                    {{-- Tombol X Kecil --}}
+                    <form action="{{ route('kategori.destroy', $kategori->id) }}" method="POST" 
+                        onsubmit="return confirm('Yakin ingin menghapus kategori ini?')" 
+                        class="inline-flex items-center">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="hover:bg-error/20 hover:text-error rounded-full p-0.5 transition-colors flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[14px]">close</span>
+                        </button>
+                    </form>
+                </a>
+            </div>
+        @endforeach
     </div>
     <div class="flex items-center gap-sm w-full md:w-auto">
         {{-- Tombol Filter --}}
@@ -65,10 +62,8 @@
     </div>
 </section>
 
-<!-- Filter Panel (Hidden by default, toggle via JS) -->
 <section id="filterPanel" class="hidden glass-panel p-lg rounded-xl border border-outline-variant/20 animate-fade-in-up">
     <form method="GET" action="{{ url('/items') }}" id="filterForm">
-        {{-- Pertahankan filter kategori yang aktif --}}
         @if(request('kategori'))
             <input type="hidden" name="kategori" value="{{ request('kategori') }}">
         @endif
@@ -91,18 +86,9 @@
                 </label>
                 <select name="status" onchange="this.form.submit()" class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-2.5 px-4 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all appearance-none">
                     <option value="">Semua Status</option>
-                    
-                    <option value="aman" {{ request('status') == 'aman' ? 'selected' : '' }}>
-                        ✅ Aman ({{ $countAman }})
-                    </option>
-
-                    <option value="kritis" {{ request('status') == 'kritis' ? 'selected' : '' }}>
-                        ⚠️ Kritis ({{ $countKritis }})
-                    </option>
-
-                    <option value="kosong" {{ request('status') == 'kosong' ? 'selected' : '' }}>
-                        ❌ Habis ({{ $countKosong }})
-                    </option>
+                    <option value="aman" {{ request('status') == 'aman' ? 'selected' : '' }}>✅ Aman ({{ $countAman }})</option>
+                    <option value="kritis" {{ request('status') == 'kritis' ? 'selected' : '' }}>⚠️ Kritis ({{ $countKritis }})</option>
+                    <option value="kosong" {{ request('status') == 'kosong' ? 'selected' : '' }}>❌ Habis ({{ $countKosong }})</option>
                 </select>
             </div>
 
@@ -111,8 +97,7 @@
                 <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">
                     <span class="material-symbols-outlined text-[14px] align-middle mr-0.5">sort</span> Urutkan
                 </label>
-                <select name="sort"
-                        class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-2.5 px-4 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all appearance-none">
+                <select name="sort" class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-2.5 px-4 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all appearance-none">
                     <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
                     <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
                     <option value="nama_asc" {{ request('sort') == 'nama_asc' ? 'selected' : '' }}>Nama A → Z</option>
@@ -125,26 +110,22 @@
 
         {{-- Action Buttons --}}
         <div class="flex items-center justify-between mt-md pt-md border-t border-outline-variant/20">
-            {{-- Info filter aktif --}}
             <div class="flex flex-wrap items-center gap-2">
                 @if(request('search'))
                     <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[11px] font-label-bold">
-                        <span class="material-symbols-outlined text-[14px]">search</span>
-                        "{{ request('search') }}"
+                        <span class="material-symbols-outlined text-[14px]">search</span> "{{ request('search') }}"
                         <a href="{{ url('/items') . '?' . http_build_query(request()->except(['search', 'page'])) }}" class="hover:text-error transition-colors ml-0.5">✕</a>
                     </span>
                 @endif
                 @if(request('status'))
                     <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[11px] font-label-bold">
-                        <span class="material-symbols-outlined text-[14px]">inventory_2</span>
-                        {{ ucfirst(request('status')) }}
+                        <span class="material-symbols-outlined text-[14px]">inventory_2</span> {{ ucfirst(request('status')) }}
                         <a href="{{ url('/items') . '?' . http_build_query(request()->except(['status', 'page'])) }}" class="hover:text-error transition-colors ml-0.5">✕</a>
                     </span>
                 @endif
                 @if(request('sort') && request('sort') !== 'terbaru')
                     <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary text-[11px] font-label-bold">
-                        <span class="material-symbols-outlined text-[14px]">sort</span>
-                        {{ request('sort') }}
+                        <span class="material-symbols-outlined text-[14px]">sort</span> {{ request('sort') }}
                         <a href="{{ url('/items') . '?' . http_build_query(request()->except(['sort', 'page'])) }}" class="hover:text-error transition-colors ml-0.5">✕</a>
                     </span>
                 @endif
@@ -152,13 +133,11 @@
 
             <div class="flex items-center gap-2">
                 @if(request()->hasAny(['search', 'status', 'kategori']) || (request('sort') && request('sort') !== 'terbaru'))
-                    <a href="{{ url('/items') }}"
-                       class="px-md py-2 rounded-xl text-on-surface-variant font-label-bold text-sm hover:bg-error/10 hover:text-error transition-colors flex items-center gap-1">
+                    <a href="{{ url('/items') }}" class="px-md py-2 rounded-xl text-on-surface-variant font-label-bold text-sm hover:bg-error/10 hover:text-error transition-colors flex items-center gap-1">
                         <span class="material-symbols-outlined text-[16px]">restart_alt</span> Reset
                     </a>
                 @endif
-                <button type="submit"
-                        class="px-lg py-2 rounded-xl bg-primary text-on-primary font-label-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-[0_0_12px_rgba(207,188,255,0.2)] flex items-center gap-1">
+                <button type="submit" class="px-lg py-2 rounded-xl bg-primary text-on-primary font-label-bold text-sm hover:brightness-110 active:scale-95 transition-all shadow-[0_0_12px_rgba(207,188,255,0.2)] flex items-center gap-1">
                     <span class="material-symbols-outlined text-[16px]">check</span> Terapkan
                 </button>
             </div>
@@ -166,17 +145,13 @@
     </form>
 </section>
 
-<!-- Main Data Table -->
 <section class="glass-panel rounded-xl overflow-hidden flex flex-col">
-    {{-- Hasil filter info bar --}}
     @if(request()->hasAny(['search', 'status', 'kategori']) || (request('sort') && request('sort') !== 'terbaru'))
     <div class="px-lg py-2.5 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
         <span class="text-[12px] text-on-surface-variant font-label-bold">
             <span class="material-symbols-outlined text-[14px] align-middle mr-0.5">filter_list</span>
             Menampilkan {{ $barangs->total() }} hasil
-            @if(request('search'))
-                untuk "<span class="text-primary">{{ request('search') }}</span>"
-            @endif
+            @if(request('search')) untuk "<span class="text-primary">{{ request('search') }}</span>" @endif
         </span>
         <a href="{{ url('/items') }}" class="text-[11px] text-primary hover:underline font-label-bold">Hapus semua filter</a>
     </div>
@@ -227,10 +202,8 @@
                         @endif
                     </td>
                     <td class="px-lg py-md text-right flex justify-end gap-1">
-                        <button type="button" 
-                            onclick="openEditModal({{ $item }})"
-                            class="p-1.5 text-on-surface-variant hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">edit</span>
+                        <button type="button" onclick="openEditModal({{ $item->load('kategori') }})" class="p-1.5 text-on-surface-variant hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">edit</span>
                         </button>
                         <form action="/items/{{ $item->id }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus barang ini?');">
                             @csrf
@@ -245,11 +218,7 @@
                         <div class="flex flex-col items-center gap-2 py-6">
                             <span class="material-symbols-outlined text-[48px] text-outline/40">search_off</span>
                             <p class="text-on-surface-variant font-body-sm">
-                                @if(request()->hasAny(['search', 'status', 'kategori']))
-                                    Tidak ada barang yang cocok dengan filter.
-                                @else
-                                    Belum ada data barang.
-                                @endif
+                                {{ request()->hasAny(['search', 'status', 'kategori']) ? 'Tidak ada barang yang cocok dengan filter.' : 'Belum ada data barang.' }}
                             </p>
                             @if(request()->hasAny(['search', 'status', 'kategori']))
                                 <a href="{{ url('/items') }}" class="text-primary text-sm font-label-bold hover:underline mt-1">Reset Filter</a>
@@ -262,13 +231,11 @@
         </table>
     </div>
     
-    <!-- Pagination -->
     <div class="p-md border-t border-outline-variant/20 bg-surface-container-low/50">
         {{ $barangs->links('pagination::tailwind') }}
     </div>
 </section>
 
-<!-- Modal Tambah Barang -->
 <div id="modalAddItem" class="fixed inset-0 z-50 flex items-center justify-center hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="document.getElementById('modalAddItem').classList.add('hidden')"></div>
     <div class="glass-panel p-lg rounded-2xl w-full max-w-lg relative z-10 animate-fade-in-up border border-outline-variant/30">
@@ -280,20 +247,17 @@
             @csrf
             <div>
                 <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Kode / SKU</label>
-                <input type="text" name="kode_barang" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1" placeholder="Contoh: BRG-001">
+                <input type="text" name="kode_barang" value="{{ $nextKodeBarang }}" readonly class="w-full bg-surface-container-low border border-outline-variant/30 rounded-xl py-3 px-4 text-primary font-bold cursor-not-allowed outline-none mt-1 select-none tracking-wider">
             </div>
             <div>
                 <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Nama Barang</label>
                 <input type="text" name="nama_barang" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1" placeholder="Masukkan nama barang">
             </div>
             <div class="grid grid-cols-2 gap-md">
+                {{-- Kategori Diubah Menjadi Input Text --}}
                 <div>
                     <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Kategori</label>
-                    <select name="kategori_id" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1 appearance-none">
-                        @foreach($kategoris as $kat)
-                        <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
-                        @endforeach
-                    </select>
+                    <input type="text" name="kategori_input" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1" placeholder="Contoh: Elektronik, Pakaian">
                 </div>
                 <div>
                     <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Satuan</label>
@@ -335,13 +299,10 @@
             </div>
 
             <div class="grid grid-cols-2 gap-md">
+                {{-- Kategori Diubah Menjadi Input Text --}}
                 <div>
                     <label class="text-[11px] font-label-bold text-on-surface-variant uppercase ml-1">Kategori</label>
-                    <select name="kategori_id" id="edit_kategori" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface mt-1">
-                        @foreach($kategoris as $kat)
-                        <option value="{{ $kat->id }}">{{ $kat->nama }}</option>
-                        @endforeach
-                    </select>
+                    <input type="text" name="kategori_input" id="edit_kategori_nama" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1" placeholder="Contoh: Elektronik, Pakaian">
                 </div>
                 <div>
                     <label class="text-[11px] font-label-bold text-on-surface-variant uppercase ml-1">Satuan</label>
@@ -371,22 +332,23 @@
     }
 
     function openEditModal(barang) {
-    // Set Action URL (agar mengarah ke /items/ID)
-    const form = document.getElementById('editForm');
-    form.action = `/items/${barang.id}`;
+        const form = document.getElementById('editForm');
+        form.action = `/items/${barang.id}`;
 
-    // Isi Field Modal
-    document.getElementById('edit_nama').value = barang.nama_barang;
-    document.getElementById('edit_kategori').value = barang.kategori_id;
-    document.getElementById('edit_satuan').value = barang.satuan;
-    document.getElementById('edit_stok_min').value = barang.stok_minimum;
+        // Isi Field Modal
+        document.getElementById('edit_nama').value = barang.nama_barang;
+        document.getElementById('edit_satuan').value = barang.satuan;
+        document.getElementById('edit_stok_min').value = barang.stok_minimum;
 
-    // Tampilkan Modal
-    document.getElementById('modalEditItem').classList.remove('hidden');
-}
+        {{-- Otomatis panggil nama kategori yang terkait dari objek relasi barang --}}
+        document.getElementById('edit_kategori_nama').value = barang.kategori ? barang.kategori.nama : '';
+
+        // Tampilkan Modal
+        document.getElementById('modalEditItem').classList.remove('hidden');
+    }
 
     function closeEditModal() {
-    document.getElementById('modalEditItem').classList.add('hidden');
+        document.getElementById('modalEditItem').classList.add('hidden');
     }
 
     // Auto-buka filter panel kalau ada filter aktif

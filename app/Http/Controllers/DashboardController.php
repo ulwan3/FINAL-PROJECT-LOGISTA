@@ -12,7 +12,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class DashboardController extends Controller
 {
-    public function index()
+   public function index()
     {
         $totalBarang = Barang::count();
         $stokMenipis = Barang::whereColumn('stok', '<=', 'stok_minimum')->count();
@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $totalStokSaatIni = Barang::sum('stok');
         $persentaseGudang = max(0, min(($totalStokSaatIni / $kapasitasMaksimal) * 100, 100));
 
-        $today = Carbon::today();
+        $today = \Carbon\Carbon::today(); // Pastikan pemanggilan Carbon aman
         $transaksiHarianMasuk = Transaksi::where('jenis', 'masuk')->whereDate('created_at', $today)->count();
         $transaksiHarianKeluar = Transaksi::where('jenis', 'keluar')->whereDate('created_at', $today)->count();
         $totalTransaksiHarian = $transaksiHarianMasuk + $transaksiHarianKeluar;
@@ -32,17 +32,16 @@ class DashboardController extends Controller
                         ->take(5)
                         ->get();
 
-        $days = collect(range(6, 0))->map(fn($i) => Carbon::now()->subDays($i)->format('Y-m-d'));
-        $labels = $days->map(fn($date) => Carbon::parse($date)->format('D'));
+        $days = collect(range(6, 0))->map(fn($i) => \Carbon\Carbon::now()->subDays($i)->format('Y-m-d'));
+        $labels = $days->map(fn($date) => \Carbon\Carbon::parse($date)->format('D'));
 
-       $stok_masuk = $days->map(function($date) {
+        $stok_masuk = $days->map(function($date) {
             return \App\Models\PemesananBarang::whereDate('created_at', $date)
                 ->where('status', 'diterima') 
                 ->sum('jumlah_pesan') ?? 0;   
-            });
+        });
 
-       $stok_keluar = $days->map(function($date) {
-            // Ganti ke model Transaksi dan filter jenis 'keluar'
+        $stok_keluar = $days->map(function($date) {
             return \App\Models\Transaksi::whereDate('created_at', $date)
                 ->where('jenis', 'keluar') 
                 ->sum('jumlah') ?? 0;
@@ -50,6 +49,12 @@ class DashboardController extends Controller
 
         $suppliers = \App\Models\Supplier::all();
 
+        // ==========================================
+        // TARGET 3: Ambil Master Barang untuk Dropdown
+        // ==========================================
+        $barangs = \App\Models\Barang::orderBy('nama_barang', 'asc')->get();
+
+        // SUNTIKKAN VARIABEL 'barangs' KE DALAM COMPACT BELOW
         return view('dashboard', compact(
             'totalBarang', 
             'stokMenipis', 
@@ -61,7 +66,8 @@ class DashboardController extends Controller
             'labels',      
             'stok_masuk',  
             'stok_keluar',
-            'suppliers'
+            'suppliers',
+            'barangs' // <-- Variabel baru terdaftar secara sah
         ));
     }
 
