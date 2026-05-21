@@ -10,40 +10,40 @@
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-[#0F1117] text-on-surface flex min-h-screen">
+<body class="bg-[#120e0e] text-on-surface flex min-h-screen">
     <!-- Sidebar Navigation -->
-    <aside class="hidden md:flex flex-col h-screen w-[240px] bg-surface-container-low border-r border-outline-variant/30 p-md z-50 fixed md:sticky top-0 left-0 overflow-y-auto custom-scrollbar">
+    <aside class="hidden md:flex flex-col h-screen w-[240px] bg-[#1c1515] border-r border-[#4d3535]/40 p-md z-50 fixed md:sticky top-0 left-0 overflow-y-auto custom-scrollbar">
         <div class="mb-xl px-sm">
             <h1 class="font-display text-headline-sm font-bold text-primary tracking-tight">Logista</h1>
             <p class="font-body-sm text-on-surface-variant opacity-70">Warehouse Control</p>
         </div>
         
         <nav class="flex-1 space-y-1">
-            <a href="/dashboard" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('dashboard') ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <a href="/dashboard" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('dashboard') ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:bg-[#2b2020]' }}">
                 <span class="material-symbols-outlined">dashboard</span>
                 <span class="font-body-md">Dashboard</span>
             </a>
-            <a href="/items" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('items*') ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <a href="/items" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('items*') ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:bg-[#2b2020]' }}">
                 <span class="material-symbols-outlined">inventory_2</span>
                 <span class="font-body-md">Master Items</span>
             </a>
-            <a href="/ops" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('ops*') ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <a href="/ops" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('ops*') ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:bg-[#2b2020]' }}">
                 <span class="material-symbols-outlined">swap_horiz</span>
                 <span class="font-body-md">Inventory Ops</span>
             </a>
-            <a href="/audit-trail" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('audit-trail*') ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <a href="/audit-trail" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('audit-trail*') ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:bg-[#2b2020]' }}">
                 <span class="material-symbols-outlined">history</span>
                 <span class="font-body-md">Audit Trail</span>
             </a>
-            <a href="/reports" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('reports*') ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <a href="/reports" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('reports*') ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:bg-[#2b2020]' }}">
                 <span class="material-symbols-outlined">analytics</span>
                 <span class="font-body-md">Reports</span>
             </a>
-            <a href="/alerts" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('alerts*') ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <a href="/alerts" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('alerts*') ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:bg-[#2b2020]' }}">
                 <span class="material-symbols-outlined">notifications_active</span>
                 <span class="font-body-md">Stock Alerts</span>
             </a>
-            <a href="/settings" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('settings*') ? 'bg-primary-container text-on-primary-container font-bold' : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <a href="/settings" class="flex items-center gap-md px-md py-sm rounded-xl transition-all duration-200 {{ request()->is('settings*') ? 'bg-primary text-white font-bold' : 'text-on-surface-variant hover:bg-[#2b2020]' }}">
                 <span class="material-symbols-outlined">settings</span>
                 <span class="font-body-md">Settings</span>
             </a>
@@ -63,7 +63,7 @@
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col min-h-screen overflow-hidden w-full relative">
         <!-- Top Navigation -->
-        <header class="sticky top-0 z-40 bg-surface/70 backdrop-blur-md flex justify-between items-center px-lg py-sm w-full border-b border-outline-variant/20 h-[64px]">
+        <header class="sticky top-0 z-40 bg-[#1c1515]/80 backdrop-blur-md flex justify-between items-center px-lg py-sm w-full border-b border-[#4d3535]/30 h-[64px]">
             <div class="flex items-center gap-md">
                 <span class="md:hidden material-symbols-outlined text-primary cursor-pointer">menu</span>
                 <div class="hidden md:flex items-center gap-2">
