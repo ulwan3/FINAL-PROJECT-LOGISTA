@@ -15,12 +15,12 @@ class InventoryOpsController extends Controller
 
         // Ambil transaksi per jenis dengan pagination
         $transaksiMasuk = Transaksi::with(['barang', 'user'])
-            ->where('jenis', 'masuk')
+            ->where('jenis', 'barang_masuk')
             ->orderBy('id', 'desc')
             ->paginate(15, ['*'], 'page_masuk');
 
         $transaksiKeluar = Transaksi::with(['barang', 'user'])
-            ->where('jenis', 'keluar')
+            ->where('jenis', 'barang_keluar')
             ->orderBy('id', 'desc')
             ->paginate(15, ['*'], 'page_keluar');
 
@@ -30,10 +30,10 @@ class InventoryOpsController extends Controller
             ->paginate(15, ['*'], 'page_mutasi');
 
         // Statistik hari ini
-        $totalMasuk  = Transaksi::where('jenis', 'masuk')->whereDate('created_at', $today)->sum('jumlah');
-        $totalKeluar = Transaksi::where('jenis', 'keluar')->whereDate('created_at', $today)->sum('jumlah');
-        $countMasuk  = Transaksi::where('jenis', 'masuk')->whereDate('created_at', $today)->count();
-        $countKeluar = Transaksi::where('jenis', 'keluar')->whereDate('created_at', $today)->count();
+        $totalMasuk  = Transaksi::where('jenis', 'barang_masuk')->whereDate('created_at', $today)->sum('jumlah');
+        $totalKeluar = Transaksi::where('jenis', 'barang_keluar')->whereDate('created_at', $today)->sum('jumlah');
+        $countMasuk  = Transaksi::where('jenis', 'barang_masuk')->whereDate('created_at', $today)->count();
+        $countKeluar = Transaksi::where('jenis', 'barang_keluar')->whereDate('created_at', $today)->count();
         $countMutasi = Transaksi::where('jenis', 'mutasi')->whereDate('created_at', $today)->count();
 
         return view('ops.index', compact(

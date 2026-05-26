@@ -1,6 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    // Baca parameter dari URL (dikirim dari halaman Alerts) - menggunakan input() bukan get()
+    $restock_id = request()->input('restock_id');
+    $restock_name = request()->input('restock_name');
+    $restock_min = request()->input('restock_min');
+    $restock_satuan = request()->input('restock_satuan');
+@endphp
+
+@if($restock_id)
+    <div class="mb-lg p-md rounded-xl bg-primary/10 border border-primary/30 flex justify-between items-center">
+        <div>
+            <span class="material-symbols-outlined text-primary align-middle mr-xs">info</span>
+            <span class="text-on-surface">Restock untuk <strong>{{ $restock_name }}</strong> (Minimal: {{ $restock_min }} {{ $restock_satuan }})</span>
+        </div>
+        <button onclick="closeRestockAlert()" class="text-on-surface-variant hover:text-on-surface">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+    </div>
+@endif
+
 <section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
     <div>
         <h2 class="font-headline-lg text-on-surface tracking-tight">Overview Hari Ini</h2>
@@ -14,7 +34,7 @@
             Export
         </a>
 
-        <button onclick="openModalPesanan()" class="flex-1 md:flex-none bg-primary text-on-primary px-md py-2 rounded-lg font-label-bold hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(207,188,255,0.2)]">
+        <button onclick="openModalPesanan()" id="btnPesanSupplier" class="flex-1 md:flex-none bg-primary text-on-primary px-md py-2 rounded-lg font-label-bold hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(207,188,255,0.2)]">
             <span class="material-symbols-outlined text-[20px]">local_shipping</span>
             Pesan ke Supplier
         </button>
@@ -90,7 +110,6 @@
             </select>
         </div>
         
-        <!-- Ganti div batang statik dengan canvas ini -->
         <div class="flex-1 h-64 relative">
             <canvas id="stockTrendChart"></canvas>
         </div>
@@ -112,7 +131,6 @@
                             Supplier: <span class="text-primary/90 font-medium">{{ $activity->supplier->nama_supplier ?? 'Tanpa Supplier' }}</span>
                         </p>
                         <p class="font-body-md text-on-surface font-bold">
-                            {{-- Gunakan $activity --}}
                             {{ $activity->barang->nama_barang ?? 'Barang Terhapus' }}
                         </p>
                         <p class="font-body-sm text-on-surface-variant">
@@ -120,7 +138,6 @@
                         </p>
                     </div>
                     
-                    {{-- Badge Status --}}
                     <span class="text-[10px] px-2 py-1 rounded-md font-label-bold uppercase border 
                         {{ ($activity->status == 'pending') ? 'border-yellow-500/50 text-yellow-400' : 'border-green-500/50 text-green-400' }}">
                         {{ $activity->status ?? 'pending' }}
@@ -128,12 +145,12 @@
                 </div>
             @empty
                 <p class="text-on-surface-variant text-center py-4">Belum ada aktivitas.</p>
-            @endforelse {{-- Pastikan tertutup dengan @endforelse, bukan @endforeach --}}
+            @endforelse
         </div>
     </div>
 </section>
 
-<div id="modalPesanan" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+<div id="modalPesanan" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="glass-panel p-lg rounded-2xl w-full max-w-md border border-outline-variant/30 shadow-2xl bg-surface-container">
         <div class="flex justify-between items-center mb-lg">
             <h3 class="font-headline-sm text-on-surface">Form Pesanan Supplier</h3>
@@ -142,36 +159,32 @@
             </button>
         </div>
 
-        <form action="{{ route('transaksi.store') }}" method="POST" class="space-y-4">
+        <form action="{{ route('transaksi.store') }}" method="POST" class="space-y-4" id="formPesanan">
             @csrf
-            
             <div>
                 <label class="block text-[11px] text-on-surface-variant mb-2 uppercase font-label-bold">Pilih Barang</label>
-                <select name="barang_id" required class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none cursor-pointer">
-                    <option value="" disabled selected>-- Pilih Barang --</option>
-                    @foreach($barangs as $b)
-                        <option value="{{ $b->id }}">
-                            [{{ $b->kode_barang }}] {{ strtoupper($b->nama_barang) }} (Stok: {{ $b->stok }} {{ $b->satuan ?? 'pcs' }})
+                <select name="barang_id" id="selectBarang" class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none">
+                    @foreach(\App\Models\Barang::all() as $b)
+                        <option value="{{ $b->id }}" data-min="{{ $b->stok_minimum }}" data-satuan="{{ $b->satuan }}"
+                            @if(request()->input('restock_id') == $b->id) selected @endif>
+                            {{ $b->nama_barang }} (Stok: {{ $b->stok }})
                         </option>
                     @endforeach
                 </select>
             </div>
-
             <div>
                 <label class="block text-[11px] text-on-surface-variant mb-2 uppercase font-label-bold">Pilih Supplier</label>
-                <select name="supplier_id" class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none cursor-pointer">
+                <select name="supplier_id" class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none">
                     <option value="">-- Pilih Supplier --</option>
                     @foreach($suppliers as $supplier)
                         <option value="{{ $supplier->id }}">{{ $supplier->nama_supplier }}</option>
                     @endforeach
                 </select>
             </div>
-
             <div>
                 <label class="block text-[11px] text-on-surface-variant mb-2 uppercase font-label-bold">Jumlah Pesanan</label>
-                <input type="number" name="jumlah" min="1" required class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface rounded-lg px-4 py-2 outline-none">
+                <input type="number" name="jumlah" id="jumlahPesanan" min="1" required class="w-full bg-surface-container-low border border-outline-variant/30 text-on-surface rounded-lg px-4 py-2 outline-none">
             </div>
-
             <button type="submit" class="w-full bg-primary text-on-primary py-3 rounded-xl font-label-bold hover:brightness-110 active:scale-95 transition-all">
                 Buat Pesanan Sekarang
             </button>
@@ -180,15 +193,43 @@
 </div>
 
 <script>
+    // Buka modal otomatis jika ada parameter restock_id dari URL
+    @if($restock_id)
+        document.addEventListener('DOMContentLoaded', function() {
+            openModalPesanan();
+            
+            // Isi otomatis jumlah pesanan dengan stok minimum
+            const minStok = {{ $restock_min ?? 0 }};
+            const inputJumlah = document.getElementById('jumlahPesanan');
+            if(inputJumlah && minStok > 0) {
+                inputJumlah.value = minStok;
+                inputJumlah.min = minStok;
+            }
+        });
+    @endif
+
     function openModalPesanan() {
         document.getElementById('modalPesanan').classList.remove('hidden');
+        document.getElementById('modalPesanan').classList.add('flex');
         document.body.style.overflow = 'hidden';
     }
+    
     function closeModalPesanan() {
         document.getElementById('modalPesanan').classList.add('hidden');
+        document.getElementById('modalPesanan').classList.remove('flex');
         document.body.style.overflow = 'auto';
+        
+        // Hapus parameter URL tanpa reload
+        if (window.history.replaceState) {
+            let url = new URL(window.location.href);
+            url.searchParams.delete('restock_id');
+            url.searchParams.delete('restock_name');
+            url.searchParams.delete('restock_min');
+            url.searchParams.delete('restock_satuan');
+            window.history.replaceState({}, document.title, url.toString());
+        }
     }
-
+    
     function closeRestockAlert() {
         const alertDiv = document.querySelector('.mb-lg.p-md.rounded-xl');
         if(alertDiv) alertDiv.remove();
@@ -203,14 +244,33 @@
             window.history.replaceState({}, document.title, url.toString());
         }
     }
-
+    
     window.onclick = function(event) {
         let modal = document.getElementById('modalPesanan');
         if (event.target == modal) closeModalPesanan();
     }
+
+    // Saat barang berubah, update jumlah pesanan otomatis
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectBarang = document.getElementById('selectBarang');
+        const inputJumlah = document.getElementById('jumlahPesanan');
+        
+        if(selectBarang && inputJumlah) {
+            function updateJumlahMinimal() {
+                const selectedOption = selectBarang.options[selectBarang.selectedIndex];
+                const minStok = selectedOption.getAttribute('data-min') || 1;
+                inputJumlah.min = minStok;
+                if(parseInt(inputJumlah.value) < parseInt(minStok)) {
+                    inputJumlah.value = minStok;
+                }
+            }
+            
+            selectBarang.addEventListener('change', updateJumlahMinimal);
+            updateJumlahMinimal();
+        }
+    });
 </script>
 
-<!-- Load library melalui CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -218,70 +278,42 @@
         const filterSelect = document.getElementById('chartFilter');
         let stockChart;
 
-        // Fungsi untuk membuat/mengganti grafik
         function initChart(labels, masuk, keluar) {
-            if (stockChart) {
-                stockChart.destroy(); // Hancurkan chart lama sebelum membuat yang baru
-            }
-
+            if (stockChart) stockChart.destroy();
             stockChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [
-                        {
-                            label: 'Masuk',
-                            data: masuk,
-                            backgroundColor: '#00d2d3',
-                            borderRadius: 4,
-                        },
-                        {
-                            label: 'Keluar',
-                            data: keluar,
-                            backgroundColor: '#ff9ff3',
-                            borderRadius: 4,
-                        }
+                        { label: 'Masuk', data: masuk, backgroundColor: '#00d2d3', borderRadius: 4 },
+                        { label: 'Keluar', data: keluar, backgroundColor: '#ff9ff3', borderRadius: 4 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { color: '#a29bfe' } }
-                    },
+                    plugins: { legend: { labels: { color: '#a29bfe' } } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                            ticks: { color: '#a29bfe' }
-                        },
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#a29bfe' }
-                        }
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#a29bfe' } },
+                        x: { grid: { display: false }, ticks: { color: '#a29bfe' } }
                     }
                 }
             });
         }
 
-        // Fungsi untuk mengambil data menggunakan AJAX Fetch API
         function fetchChartData(filterValue) {
             fetch(`/dashboard/chart-data?filter=${filterValue}`)
                 .then(response => response.json())
-                .then(data => {
-                    initChart(data.labels, data.stok_masuk, data.stok_keluar);
-                })
-                .catch(error => console.error('Error fetching chart data:', error));
+                .then(data => initChart(data.labels, data.stok_masuk, data.stok_keluar))
+                .catch(error => console.error('Error:', error));
         }
 
-        // Jalankan pertama kali saat halaman dibuka (default: minggu)
         fetchChartData('minggu');
-
-        // Event listener saat dropdown diganti
-        filterSelect.addEventListener('change', function() {
-            fetchChartData(this.value);
-        });
+        if(filterSelect) {
+            filterSelect.addEventListener('change', function() {
+                fetchChartData(this.value);
+            });
+        }
     });
 </script>
-
 @endsection

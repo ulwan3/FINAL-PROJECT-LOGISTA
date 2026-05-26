@@ -12,12 +12,12 @@ class ReportController extends Controller
     public function index()
     {
         // Data untuk card statistik (Total Barang Masuk/Keluar Bulan Ini)
-        $masuk = Transaksi::where('jenis', 'masuk')
+        $masuk = Transaksi::where('jenis', 'barang_masuk')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('jumlah');
             
-        $keluar = Transaksi::where('jenis', 'keluar')
+        $keluar = Transaksi::where('jenis', 'barang_keluar')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('jumlah');
@@ -29,7 +29,7 @@ class ReportController extends Controller
         $chartData = $this->getChartData();
         
         // DATA REAL: Top 5 Barang Paling Sering Keluar (Bulan Ini)
-        $topBarangKeluar = Transaksi::where('jenis', 'keluar')
+        $topBarangKeluar = Transaksi::where('jenis', 'barang_keluar')
             ->whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->select('barang_id', DB::raw('SUM(jumlah) as total_keluar'))
@@ -71,11 +71,11 @@ class ReportController extends Controller
             $startDate = now()->subWeeks($i)->startOfWeek();
             $endDate = now()->subWeeks($i)->endOfWeek();
             
-            $masuk = Transaksi::where('jenis', 'masuk')
+            $masuk = Transaksi::where('jenis', 'barang_masuk')
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('jumlah');
                 
-            $keluar = Transaksi::where('jenis', 'keluar')
+            $keluar = Transaksi::where('jenis', 'barang_keluar')
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->sum('jumlah');
             

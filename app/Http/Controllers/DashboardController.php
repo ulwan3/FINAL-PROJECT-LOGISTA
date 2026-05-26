@@ -23,8 +23,8 @@ class DashboardController extends Controller
         $persentaseGudang = max(0, min(($totalStokSaatIni / $kapasitasMaksimal) * 100, 100));
 
         $today = \Carbon\Carbon::today(); // Pastikan pemanggilan Carbon aman
-        $transaksiHarianMasuk = Transaksi::where('jenis', 'masuk')->whereDate('created_at', $today)->count();
-        $transaksiHarianKeluar = Transaksi::where('jenis', 'keluar')->whereDate('created_at', $today)->count();
+        $transaksiHarianMasuk = Transaksi::where('jenis', 'barang_masuk')->whereDate('created_at', $today)->count();
+        $transaksiHarianKeluar = Transaksi::where('jenis', 'barang_keluar')->whereDate('created_at', $today)->count();
         $totalTransaksiHarian = $transaksiHarianMasuk + $transaksiHarianKeluar;
         
         $recentActivities = PemesananBarang::with(['barang', 'user', 'supplier'])
