@@ -43,14 +43,14 @@
                         <span class="material-symbols-outlined text-[20px]">lock</span>
                     </span>
                     <input type="password" id="password" name="password" class="w-full bg-surface-container-highest border border-outline-variant/30 text-on-surface font-body-md rounded-xl pl-12 pr-12 py-3 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/50" placeholder="••••••••" required>
-                    <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-on-surface-variant hover:text-on-surface transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 pr-4 flex items-center text-on-surface-variant hover:text-on-surface transition-colors focus:outline-none cursor-pointer active:scale-95 transition-transform">
+                        <span id="togglePasswordIcon" class="material-symbols-outlined text-[20px]">visibility_off</span>
                     </button>
                 </div>
             </div>
 
             <div class="pt-sm">
-                <button type="submit" class="w-full bg-primary text-on-primary font-label-bold text-body-md py-3 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(207,188,255,0.3)] flex justify-center items-center gap-sm">
+                <button type="submit" class="w-full bg-primary text-on-primary font-label-bold text-body-md py-3 rounded-xl hover:brightness-110 active:scale-[0.98] transition-all shadow-[0_0_20px_rgba(207,188,255,0.3)] flex justify-center items-center gap-sm cursor-pointer">
                     <span>Masuk ke Sistem</span>
                     <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
                 </button>
@@ -64,4 +64,61 @@
         </div>
     </div>
 </div>
+
+<script>
+    // Fitur Show/Hide Password dengan TEKAN DAN TAHAN
+    (function() {
+        var toggleBtn = document.getElementById('togglePassword');
+        var passwordInput = document.getElementById('password');
+        var iconSpan = document.getElementById('togglePasswordIcon');
+        
+        if (toggleBtn && passwordInput && iconSpan) {
+            
+            // Fungsi untuk menampilkan password (mata terbuka)
+            function showPassword() {
+                passwordInput.type = 'text';
+                iconSpan.textContent = 'visibility';
+            }
+            
+            // Fungsi untuk menyembunyikan password (mata tertutup)
+            function hidePassword() {
+                passwordInput.type = 'password';
+                iconSpan.textContent = 'visibility_off';
+            }
+            
+            // Event: saat tombol ditekan (mouse down)
+            toggleBtn.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                showPassword();
+            });
+            
+            // Event: saat tombol dilepas (mouse up)
+            toggleBtn.addEventListener('mouseup', function(e) {
+                e.preventDefault();
+                hidePassword();
+            });
+            
+            // Event: jika kursor keluar dari tombol saat masih ditekan
+            toggleBtn.addEventListener('mouseleave', function(e) {
+                hidePassword();
+            });
+            
+            // Dukungan untuk touch screen (ponsel)
+            toggleBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                showPassword();
+            });
+            
+            toggleBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                hidePassword();
+            });
+            
+            toggleBtn.addEventListener('touchcancel', function(e) {
+                e.preventDefault();
+                hidePassword();
+            });
+        }
+    })();
+</script>
 @endsection
