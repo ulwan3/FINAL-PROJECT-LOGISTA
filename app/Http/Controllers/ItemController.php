@@ -4,65 +4,81 @@ namespace App\Http\Controllers;
 
 use App\Models\Barang;
 use App\Models\Kategori;
+use App\Models\Transaksi;
+use App\Services\StokAlertService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class ItemController extends Controller
 {
+    private function totalStokSql()
+    {
+        return '(COALESCE(barangs.stok_gudang, 0) + COALESCE(barangs.stok_rak, 0))';
+    }
+
     public function index(Request $request)
     {
-        $query = Barang::with('kategori');
+        $totalStokSql = $this->totalStokSql();
 
-        // Search by nama_barang or kode_barang
+        $query = Barang::with('kategori')
+            ->select('barangs.*')
+            ->selectRaw("$totalStokSql as total_stok_hitung");
+
         if ($request->filled('search')) {
             $search = $request->search;
+
             $query->where(function ($q) use ($search) {
                 $q->where('nama_barang', 'like', "%{$search}%")
-                  ->orWhere('kode_barang', 'like', "%{$search}%");
+                    ->orWhere('kode_barang', 'like', "%{$search}%");
             });
         }
 
-        // Filter by kategori
         if ($request->filled('kategori')) {
             $query->where('kategori_id', $request->kategori);
         }
 
-        // Filter by stock status
         if ($request->filled('status')) {
-            $value = $request->status;
-            switch ($value) {
+            $switchStatus = $request->status;
+            switch ($switchStatus) {
                 case 'aman':
-                    $query->whereColumn('stok', '>', 'stok_minimum');
+                    $query->whereRaw("$totalStokSql > barangs.stok_minimum");
                     break;
+
                 case 'kritis':
-                    $query->whereColumn('stok', '<=', 'stok_minimum')
-                          ->where('stok', '>', 0);
+                    $query->whereRaw("$totalStokSql <= barangs.stok_minimum")
+                        ->whereRaw("$totalStokSql > 0");
                     break;
+
                 case 'kosong':
-                    $query->where('stok', '<=', 0);
+                    $query->whereRaw("$totalStokSql <= 0");
                     break;
             }
         }
 
-        // Sort options
         $sortValue = $request->sort ?? 'terbaru';
+
         switch ($sortValue) {
             case 'terlama':
                 $query->orderBy('id', 'asc');
                 break;
+
             case 'nama_asc':
                 $query->orderBy('nama_barang', 'asc');
                 break;
+
             case 'nama_desc':
                 $query->orderBy('nama_barang', 'desc');
                 break;
+
             case 'stok_asc':
-                $query->orderBy('stok', 'asc');
+                $query->orderByRaw("$totalStokSql ASC");
                 break;
+
             case 'stok_desc':
-                $query->orderBy('stok', 'desc');
+                $query->orderByRaw("$totalStokSql DESC");
                 break;
-            default: // terbaru
+
+            default:
                 $query->orderBy('id', 'desc');
                 break;
         }
@@ -71,124 +87,144 @@ class ItemController extends Controller
         $kategoris = Kategori::all();
         $totalBarang = Barang::count();
 
-        // Count per status for badges
-        $countAman = Barang::whereColumn('stok', '>', 'stok_minimum')->count();
-        $countKritis = Barang::whereColumn('stok', '<=', 'stok_minimum')->where('stok', '>', 0)->count();
-        $countKosong = Barang::where('stok', '<=', 0)->count();
+        $countAman = Barang::whereRaw("$totalStokSql > barangs.stok_minimum")
+            ->count();
 
-        // --- BERIKUT LOGIKA COPIED UNTUK MENGINTIP KODE BERIKUTNYA ---
+        $countKritis = Barang::whereRaw("$totalStokSql <= barangs.stok_minimum")
+            ->whereRaw("$totalStokSql > 0")
+            ->count();
+
+        $countKosong = Barang::whereRaw("$totalStokSql <= 0")
+            ->count();
+
         $latestBarang = Barang::latest('id')->first();
         $nextNumber = 1;
 
         if ($latestBarang && $latestBarang->kode_barang) {
             $numericPart = preg_replace('/[^0-9]/', '', $latestBarang->kode_barang);
+
             if (!empty($numericPart)) {
-                $nextNumber = (int)$numericPart + 1;
+                $nextNumber = (int) $numericPart + 1;
             }
         }
-        
-        $nextKodeBarang = 'BRG-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-        // -------------------------------------------------------------
 
-        // Menambahkan 'nextKodeBarang' ke dalam list compact
+        $nextKodeBarang = 'BRG-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+
         return view('items.index', compact(
-            'barangs', 'kategoris', 'totalBarang',
-            'countAman', 'countKritis', 'countKosong', 'nextKodeBarang'
+            'barangs',
+            'kategoris',
+            'totalBarang',
+            'countAman',
+            'countKritis',
+            'countKosong',
+            'nextKodeBarang'
         ));
     }
 
-   public function store(Request $request)
+    public function store(Request $request)
     {
-        // 1. Validasi input form (menangkap kategori_input dari elemen datalist/text)
         $request->validate([
             'nama_barang'    => 'required',
-            'kategori_input' => 'required', 
+            'kategori_input' => 'required',
             'satuan'         => 'required',
             'stok'           => 'required|integer|min:0',
             'stok_minimum'   => 'required|integer|min:0',
         ]);
 
-        // 2. Logika Pembuatan Kode Barang Otomatis (Format: BRG-0034, dst)
+        $stokAwal = (int) $request->stok;
+
         $latestBarang = Barang::latest('id')->first();
         $nextNumber = 1;
 
         if ($latestBarang && $latestBarang->kode_barang) {
             $numericPart = preg_replace('/[^0-9]/', '', $latestBarang->kode_barang);
+
             if (!empty($numericPart)) {
-                $nextNumber = (int)$numericPart + 1;
+                $nextNumber = (int) $numericPart + 1;
             }
         }
-        
+
         $autoKodeBarang = 'BRG-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
-        // 3. Logika Otomatisasi Kategori Baru / Lama
-        // Kita ubah teksnya jadi UPPERCASE biar rapi dan konsisten di DB (misal: "baju" jadi "BAJU")
         $namaKategori = strtoupper(trim($request->kategori_input));
         $slugKategori = Str::slug($namaKategori);
-        
-        // Cek database. Kalau nama kategori sudah ada, ambil ID-nya. Kalau belum ada, otomatis buat baru.
+
         $kategori = Kategori::firstOrCreate(
             ['nama' => $namaKategori],
             ['slug' => $slugKategori]
         );
 
-        // 4. Penggabungan Data untuk Disimpan
-        $data = $request->except(['kategori_input']); // Buang teks mentah kategori_input agar tidak crash
-        $data['kode_barang'] = $autoKodeBarang;       // Masukkan kode otomatis (BRG-XXXX)
-        $data['kategori_id'] = $kategori->id;         // Masukkan ID kategori yang sah hasil check/create
+        $barangBaru = new Barang();
+        $barangBaru->kode_barang = $autoKodeBarang;
+        $barangBaru->nama_barang = $request->nama_barang;
+        $barangBaru->kategori_id = $kategori->id;
+        $barangBaru->satuan = $request->satuan;
+        $barangBaru->stok_minimum = (int) $request->stok_minimum;
+        $barangBaru->stok_gudang = $stokAwal;
+        $barangBaru->stok_rak = 0;
+        $barangBaru->stok = $stokAwal;
+        $barangBaru->total_stok = $stokAwal;
+        $barangBaru->save();
 
-        // 5. Eksekusi simpan ke database tabel barangs
-        $barangBaru = Barang::create($data);
+        $kodeTrxOtomatis = 'TRX-MASUK-' . date('Ymd') . '-' . strtoupper(Str::random(6));
 
-        // Generate kode transaksi otomatis untuk stok awal barang baru
-        $kodeTrxOtomatis = 'TRX-MASUK-' . date('Ymd') . '-' . strtoupper(\Illuminate\Support\Str::random(6));
-
-        // Asumsi nama Model kamu adalah Transaksi (jika berbeda, sesuaikan nama modelnya)
-        \App\Models\Transaksi::create([
-            'kode_transaksi' => $kodeTrxOtomatis,
-            'jenis'          => 'masuk',
-            'barang_id'      => $barangBaru->id,              // ID barang baru yang otomatis sinkron
-            'jumlah'         => $barangBaru->stok,            // Diambil dari input stok awal
-            'stok_sebelum'    => 0,                            // Stok sebelum ada barang baru pasti 0
-            'stok_sesudah'     => $barangBaru->stok,            // Stok sesudah = stok awal
-            'keterangan'     => 'Stok Awal Barang Baru (' . $barangBaru->kode_barang . ')', 
-            'user_id'        => auth()->id() ?? 2,            // ID user login, default ke 2 sesuai data di screenshot kamu
+        // 🔥 FIX UTAMA: Menyesuaikan nama key array dengan nama asli kolom database kamu
+        Transaksi::create([
+            'kode_transaksi'      => $kodeTrxOtomatis,
+            'jenis'               => 'barang_masuk',
+            'barang_id'           => $barangBaru->id,
+            'jumlah'              => $stokAwal,
+            'total_stok_sebelum'  => 0,            // Mengganti 'stok_sebelum'
+            'total_stok_sesudah'  => $stokAwal,     // Mengganti 'stok_sesudah'
+            'stok_gudang_sebelum' => 0,            // Ditambahkan agar tidak NULL
+            'stok_gudang_sesudah' => $stokAwal,     // Ditambahkan agar tidak NULL
+            'stok_rak_sebelum'    => 0,            // Ditambahkan agar tidak NULL
+            'stok_rak_sesudah'    => 0,            // Ditambahkan agar tidak NULL
+            'keterangan'          => 'Stok Awal Barang Baru (' . $barangBaru->kode_barang . ')',
+            'user_id'             => auth()->id() ?? 2,
         ]);
 
-        // 6. Redirect kembali ke halaman master barang dengan alert sukses
-        return redirect('/items')->with('success', 'Barang berhasil ditambahkan dengan Kode: ' . $autoKodeBarang);
+        StokAlertService::cekDanKirim($barangBaru);
+
+        return redirect('/items')->with(
+            'success',
+            'Barang berhasil ditambahkan dengan Kode: ' . $autoKodeBarang
+        );
     }
 
     public function update(Request $request, $id)
     {
         $barang = Barang::findOrFail($id);
-        
-        // 1. Validasi diubah dari 'kategori_id' menjadi 'kategori_input'
-        $request->validate([
-            'nama_barang' => 'required',
-            'kategori_input' => 'required', // Menerima teks kategori bebas
-            'satuan' => 'required',
-            'stok_minimum' => 'required|integer|min:0',
-        ]);
-        
-        $namaKategori = strtoupper(trim($request->kategori_input));
-        $slugKategori = \Illuminate\Support\Str::slug($namaKategori);
 
-        // 2. Logika otomatisasi cek/buat kategori baru
-        $namaKategori = trim($request->kategori_input);
+        $request->validate([
+            'nama_barang'    => 'required',
+            'kategori_input' => 'required',
+            'satuan'         => 'required',
+            'stok_minimum'   => 'required|integer|min:0',
+        ]);
+
+        $namaKategori = strtoupper(trim($request->kategori_input));
+        $slugKategori = Str::slug($namaKategori);
+
         $kategori = Kategori::firstOrCreate(
             ['nama' => $namaKategori],
             ['slug' => $slugKategori]
         );
 
-        // 3. Ambil data input kecuali kode_barang, stok, dan kategori_input mentah
-        $data = $request->except(['kode_barang', 'stok', 'kategori_input']);
-        
-        // 4. Selipkan id kategori hasil deteksi/pembuatan otomatis tadi
-        $data['kategori_id'] = $kategori->id;
+        $barang->nama_barang = $request->nama_barang;
+        $barang->kategori_id = $kategori->id;
+        $barang->satuan = $request->satuan;
+        $barang->stok_minimum = (int) $request->stok_minimum;
 
-        $barang->update($data); 
-        
+        $totalStok = ($barang->stok_gudang ?? 0) + ($barang->stok_rak ?? 0);
+
+        $barang->stok = $totalStok;
+        $barang->total_stok = $totalStok;
+
+        $barang->save();
+
+        StokAlertService::cekDanKirim($barang);
+
         return back()->with('success', 'Barang berhasil diubah');
     }
 
@@ -196,6 +232,7 @@ class ItemController extends Controller
     {
         $barang = Barang::findOrFail($id);
         $barang->delete();
+
         return back()->with('success', 'Barang berhasil dihapus');
     }
 }

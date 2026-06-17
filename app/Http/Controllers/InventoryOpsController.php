@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Barang;
 use App\Models\Transaksi;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
@@ -29,12 +28,31 @@ class InventoryOpsController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(15, ['*'], 'page_mutasi');
 
-        // Statistik hari ini
-        $totalMasuk  = Transaksi::where('jenis', 'barang_masuk')->whereDate('created_at', $today)->sum('jumlah');
-        $totalKeluar = Transaksi::where('jenis', 'barang_keluar')->whereDate('created_at', $today)->sum('jumlah');
-        $countMasuk  = Transaksi::where('jenis', 'barang_masuk')->whereDate('created_at', $today)->count();
-        $countKeluar = Transaksi::where('jenis', 'barang_keluar')->whereDate('created_at', $today)->count();
-        $countMutasi = Transaksi::where('jenis', 'mutasi')->whereDate('created_at', $today)->count();
+        // Statistik jumlah barang hari ini
+        $totalMasuk = Transaksi::where('jenis', 'barang_masuk')
+            ->whereDate('created_at', $today)
+            ->sum('jumlah');
+
+        $totalKeluar = Transaksi::where('jenis', 'barang_keluar')
+            ->whereDate('created_at', $today)
+            ->sum('jumlah');
+
+        $totalMutasi = Transaksi::where('jenis', 'mutasi')
+            ->whereDate('created_at', $today)
+            ->sum('jumlah');
+
+        // Statistik jumlah transaksi hari ini
+        $countMasuk = Transaksi::where('jenis', 'barang_masuk')
+            ->whereDate('created_at', $today)
+            ->count();
+
+        $countKeluar = Transaksi::where('jenis', 'barang_keluar')
+            ->whereDate('created_at', $today)
+            ->count();
+
+        $countMutasi = Transaksi::where('jenis', 'mutasi')
+            ->whereDate('created_at', $today)
+            ->count();
 
         return view('ops.index', compact(
             'transaksiMasuk',
@@ -42,6 +60,7 @@ class InventoryOpsController extends Controller
             'transaksiMutasi',
             'totalMasuk',
             'totalKeluar',
+            'totalMutasi',
             'countMasuk',
             'countKeluar',
             'countMutasi'

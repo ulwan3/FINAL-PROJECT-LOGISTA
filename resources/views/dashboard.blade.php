@@ -71,16 +71,25 @@
         </div>
     </div>
 
-    <div class="glass-panel p-lg rounded-2xl flex flex-col gap-md relative overflow-hidden group border-error/30">
-        <div class="absolute -right-6 -top-6 w-24 h-24 bg-error/10 rounded-full blur-xl group-hover:bg-error/20 transition-all"></div>
+    <div class="glass-panel p-lg rounded-2xl flex flex-col gap-md relative overflow-hidden group">
+        <div class="absolute -right-6 -top-6 w-24 h-24 bg-primary/10 rounded-full blur-xl group-hover:bg-primary/20 transition-all"></div>
+        
         <div class="flex justify-between items-start">
             <span class="font-label-bold text-on-surface-variant uppercase tracking-wider">Kapasitas Gudang</span>
-            <span class="material-symbols-outlined text-error">warehouse</span>
+            <div class="text-right text-on-surface-variant font-label-bold text-sm tracking-wide leading-tight">
+                <span>{{ number_format($totalStokSaatIni) }} /</span>
+                <span class="block text-xs font-normal opacity-75">{{ number_format($kapasitasMaksimal ?? 5000) }} Item</span>
+            </div>
         </div>
+        
         <div>
-            <div class="font-display text-[32px] text-on-surface leading-none">{{ round($persentaseGudang) }}%</div>
-            <div class="w-full bg-surface-container-high rounded-full h-1.5 mt-sm overflow-hidden">
-                <div class="bg-error h-1.5 rounded-full transition-all duration-500" style="width: {{ $persentaseGudang }}%"></div>
+            <div class="font-display text-[32px] text-on-surface leading-none">
+                {{ number_format($persentaseGudang, 0) }}%
+            </div>
+            <div class="w-full bg-surface-variant/30 rounded-full h-1 mt-sm overflow-hidden">
+                <div class="bg-primary h-full rounded-full transition-all duration-500" 
+                    style="width: {{ $persentaseGudang }}%">
+                </div>
             </div>
         </div>
     </div>
@@ -165,9 +174,13 @@
                 <label class="block text-[11px] text-on-surface-variant mb-2 uppercase font-label-bold">Pilih Barang</label>
                 <select name="barang_id" id="selectBarang" class="w-full bg-surface-container-low border border-outline-variant/30 text-white rounded-lg px-4 py-2 outline-none">
                     @foreach(\App\Models\Barang::all() as $b)
+                    @php
+                        // SINKRONISASI: Menghitung total stok dengan rumus yang sama seperti di Master Item
+                        $stokSinkron = ($b->stok_gudang ?? 0) + ($b->stok_rak ?? 0);
+                    @endphp
                         <option value="{{ $b->id }}" data-min="{{ $b->stok_minimum }}" data-satuan="{{ $b->satuan }}"
                             @if(request()->input('restock_id') == $b->id) selected @endif>
-                            {{ $b->nama_barang }} (Stok: {{ $b->stok }})
+                            [{{ $b->kode_barang ?? 'No SKU' }}] {{ $b->nama_barang }} (Stok: {{ $stokSinkron }})
                         </option>
                     @endforeach
                 </select>

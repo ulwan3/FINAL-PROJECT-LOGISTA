@@ -6,27 +6,23 @@
     <p class="font-body-sm text-on-surface-variant">Kelola daftar barang, kategori, dan batas minimum stok gudang.</p>
 </section>
 
+{{-- TABS KATEGORI + TOMBOL SEJAJAR --}}
 <section class="flex flex-col md:flex-row justify-between items-start md:items-center gap-md glass-panel p-md rounded-xl">
+    {{-- Kiri: Tabs Kategori --}}
     <div class="flex flex-wrap gap-sm">
-        {{-- Tab "Semua" --}}
         <a href="{{ url('/items') }}"
            class="px-md py-2 text-body-sm font-label-bold rounded-lg border transition-colors
            {{ !request('kategori') && !request('status') ? 'bg-primary-container text-on-primary-container border-primary/20' : 'text-on-surface-variant hover:bg-surface-container-high border-transparent' }}">
             Semua ({{ $totalBarang }})
         </a>
-        {{-- Tabs Kategori Dinamis --}}
         @foreach($kategoris as $kategori)
             <div class="relative flex items-center group">
-                {{-- Link Filter (Kotak Utama) --}}
                 <a href="{{ route('items.index', array_merge(request()->query(), ['kategori' => $kategori->id, 'page' => 1])) }}"
                     class="px-md py-2 text-body-sm font-label-bold rounded-lg border transition-all flex items-center gap-3
                     {{ request('kategori') == $kategori->id 
                         ? 'bg-primary text-on-primary border-primary shadow-md'
                         : 'bg-surface-container-high text-on-surface-variant border-outline-variant/30 hover:border-primary/50' }}">
-                    
                     <span>{{ strtoupper($kategori->nama) }}</span>
-
-                    {{-- Tombol X Kecil --}}
                     <form action="{{ route('kategori.destroy', $kategori->id) }}" method="POST" 
                         onsubmit="return confirm('Yakin ingin menghapus kategori ini?')" 
                         class="inline-flex items-center">
@@ -40,11 +36,13 @@
             </div>
         @endforeach
     </div>
+    
+    {{-- Kanan: Tombol Filter, Tambah Barang, Supplier (SEJAJAR) --}}
     <div class="flex items-center gap-sm w-full md:w-auto">
         {{-- Tombol Filter --}}
         <button onclick="toggleFilterPanel()"
                 id="btnFilter"
-                class="flex-1 md:flex-none flex items-center justify-center gap-xs px-md py-2 text-body-sm font-label-bold rounded-lg transition-colors border
+                class="flex items-center justify-center gap-xs px-md py-2 text-body-sm font-label-bold rounded-lg transition-colors border
                 {{ request()->hasAny(['search', 'status', 'sort']) && (request('sort', 'terbaru') !== 'terbaru' || request('search') || request('status'))
                     ? 'bg-primary/10 text-primary border-primary/30'
                     : 'text-on-surface bg-surface-container-highest border-outline-variant/30 hover:bg-surface-bright' }}">
@@ -54,22 +52,31 @@
                 <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
             @endif
         </button>
-        {{-- Tombol Tambah --}}
+        
+        {{-- Tombol Tambah Barang --}}
         <button onclick="document.getElementById('modalAddItem').classList.remove('hidden')"
-                class="flex-1 md:flex-none flex items-center justify-center gap-xs px-md py-2 text-body-sm font-label-bold text-on-primary bg-primary rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(207,188,255,0.2)]">
-            <span class="material-symbols-outlined text-[18px]">add</span> Tambah
+                class="flex items-center justify-center gap-xs px-md py-2 text-body-sm font-label-bold text-on-primary bg-primary rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(207,188,255,0.2)]">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            Tambah Barang
         </button>
+        
+        {{-- Tombol Supplier (Pindah ke halaman supplier) --}}
+        <a href="{{ route('supplier.index') }}"
+           class="flex items-center justify-center gap-xs px-md py-2 text-body-sm font-label-bold text-on-primary bg-primary rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(207,188,255,0.2)]">
+            <span class="material-symbols-outlined text-[18px]">business</span>
+            Supplier
+        </a>
     </div>
 </section>
 
-<section id="filterPanel" class="hidden glass-panel p-lg rounded-xl border border-outline-variant/20 animate-fade-in-up">
+{{-- FILTER PANEL --}}
+<section id="filterPanel" class="hidden glass-panel p-lg rounded-xl border border-outline-variant/20 animate-fade-in-up mt-md">
     <form method="GET" action="{{ url('/items') }}" id="filterForm">
         @if(request('kategori'))
             <input type="hidden" name="kategori" value="{{ request('kategori') }}">
         @endif
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-md">
-            {{-- Search --}}
             <div class="flex flex-col gap-1">
                 <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">
                     <span class="material-symbols-outlined text-[14px] align-middle mr-0.5">search</span> Cari Barang
@@ -79,7 +86,6 @@
                        class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-2.5 px-4 text-on-surface text-sm focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all">
             </div>
 
-            {{-- Status Stok --}}
             <div class="flex flex-col gap-1">
                 <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">
                     <span class="material-symbols-outlined text-[14px] align-middle mr-0.5">inventory_2</span> Status Stok
@@ -92,7 +98,6 @@
                 </select>
             </div>
 
-            {{-- Urutan --}}
             <div class="flex flex-col gap-1">
                 <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">
                     <span class="material-symbols-outlined text-[14px] align-middle mr-0.5">sort</span> Urutkan
@@ -108,7 +113,6 @@
             </div>
         </div>
 
-        {{-- Action Buttons --}}
         <div class="flex items-center justify-between mt-md pt-md border-t border-outline-variant/20">
             <div class="flex flex-wrap items-center gap-2">
                 @if(request('search'))
@@ -145,7 +149,8 @@
     </form>
 </section>
 
-<section class="glass-panel rounded-xl overflow-hidden flex flex-col">
+{{-- TABEL BARANG --}}
+<section class="glass-panel rounded-xl overflow-hidden flex flex-col mt-lg">
     @if(request()->hasAny(['search', 'status', 'kategori']) || (request('sort') && request('sort') !== 'terbaru'))
     <div class="px-lg py-2.5 bg-primary/5 border-b border-primary/10 flex items-center justify-between">
         <span class="text-[12px] text-on-surface-variant font-label-bold">
@@ -161,28 +166,28 @@
         <table class="w-full text-left border-collapse min-w-[800px]">
             <thead>
                 <tr class="bg-surface-container-high border-b border-outline-variant/30">
-                    <th class="px-lg py-md font-label-bold text-on-surface-variant w-[80px]">FOTO</th>
+                    <th class="px-lg py-md font-label-bold text-on-surface-variant text-center w-[60px]">NO</th>
                     <th class="px-lg py-md font-label-bold text-on-surface-variant">SKU & NAMA BARANG</th>
                     <th class="px-lg py-md font-label-bold text-on-surface-variant">KATEGORI</th>
                     <th class="px-lg py-md font-label-bold text-on-surface-variant">STOK</th>
                     <th class="px-lg py-md font-label-bold text-on-surface-variant">STATUS</th>
-                    <th class="px-lg py-md font-label-bold text-on-surface-variant text-right">AKSI</th>
+                    <th class="px-lg py-md font-label-bold text-on-surface-variant text-center w-[80px]">AKSI</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
                 @forelse($barangs as $item)
                 <tr class="hover:bg-surface-container/50 transition-colors group">
-                    <td class="px-lg py-md">
-                        <div class="w-12 h-12 rounded bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant/20">
-                            <span class="material-symbols-outlined text-outline">image</span>
+                    <td class="px-lg py-md text-center align-middle">
+                        <div class="font-body-md text-on-surface font-medium">
+                            {{ $loop->iteration + (($barangs->currentPage() - 1) * $barangs->perPage()) }}
                         </div>
                     </td>
-                    <td class="px-lg py-md">
+                    <td class="px-lg py-md align-middle">
                         <div class="font-body-md text-on-surface font-medium group-hover:text-primary transition-colors">{{ $item->nama_barang }}</div>
                         <div class="font-label-muted text-on-surface-variant mt-0.5">SKU: {{ $item->kode_barang }}</div>
                     </td>
-                    <td class="px-lg py-md font-body-sm text-on-surface-variant">{{ $item->kategori->nama ?? '-' }}</td>
-                    <td class="px-lg py-md">
+                    <td class="px-lg py-md font-body-sm text-on-surface-variant align-middle">{{ $item->kategori->nama ?? '-' }}</td>
+                    <td class="px-lg py-md align-middle">
                         @if($item->stok <= 0)
                             <div class="font-body-md text-error font-bold">Habis</div>
                         @elseif($item->stok <= $item->stok_minimum)
@@ -192,7 +197,7 @@
                         @endif
                         <div class="font-label-muted text-on-surface-variant mt-0.5">Min: {{ $item->stok_minimum }}</div>
                     </td>
-                    <td class="px-lg py-md">
+                    <td class="px-lg py-md align-middle">
                         @if($item->stok <= 0)
                             <span class="px-2 py-1 rounded-sm bg-error-container/20 text-error font-label-bold text-[10px] border border-error/20">Kosong</span>
                         @elseif($item->stok <= $item->stok_minimum)
@@ -201,15 +206,19 @@
                             <span class="px-2 py-1 rounded-sm bg-green-500/10 text-green-400 font-label-bold text-[10px] border border-green-500/20">Aman</span>
                         @endif
                     </td>
-                    <td class="px-lg py-md text-right flex justify-end gap-1">
-                        <button type="button" onclick="openEditModal({{ $item->load('kategori') }})" class="p-1.5 text-on-surface-variant hover:text-primary transition-colors">
-                            <span class="material-symbols-outlined text-[20px]">edit</span>
-                        </button>
-                        <form action="/items/{{ $item->id }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus barang ini?');">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="p-1.5 text-on-surface-variant hover:text-error transition-colors"><span class="material-symbols-outlined text-[20px]">delete</span></button>
-                        </form>
+                    <td class="px-lg py-md text-center align-middle">
+                        <div class="flex justify-center gap-1">
+                            <button type="button" onclick="openEditModal({{ $item->load('kategori') }})" class="p-1.5 text-on-surface-variant hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">edit</span>
+                            </button>
+                            <form action="/items/{{ $item->id }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus barang ini?');" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-1.5 text-on-surface-variant hover:text-error transition-colors">
+                                    <span class="material-symbols-outlined text-[20px]">delete</span>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty
@@ -236,6 +245,7 @@
     </div>
 </section>
 
+{{-- MODAL TAMBAH BARANG --}}
 <div id="modalAddItem" class="fixed inset-0 z-50 flex items-center justify-center hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="document.getElementById('modalAddItem').classList.add('hidden')"></div>
     <div class="glass-panel p-lg rounded-2xl w-full max-w-lg relative z-10 animate-fade-in-up border border-outline-variant/30">
@@ -254,7 +264,6 @@
                 <input type="text" name="nama_barang" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1" placeholder="Masukkan nama barang">
             </div>
             <div class="grid grid-cols-2 gap-md">
-                {{-- Kategori Diubah Menjadi Input Text --}}
                 <div>
                     <label class="text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider ml-1">Kategori</label>
                     <input type="text" name="kategori_input" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1" placeholder="Contoh: Elektronik, Pakaian">
@@ -282,6 +291,7 @@
     </div>
 </div>
 
+{{-- MODAL EDIT BARANG --}}
 <div id="modalEditItem" class="fixed inset-0 z-50 flex items-center justify-center hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEditModal()"></div>
     <div class="glass-panel p-lg rounded-2xl w-full max-w-lg relative z-10 border border-outline-variant/30">
@@ -299,7 +309,6 @@
             </div>
 
             <div class="grid grid-cols-2 gap-md">
-                {{-- Kategori Diubah Menjadi Input Text --}}
                 <div>
                     <label class="text-[11px] font-label-bold text-on-surface-variant uppercase ml-1">Kategori</label>
                     <input type="text" name="kategori_input" id="edit_kategori_nama" required class="w-full bg-surface-container-lowest border border-outline-variant/50 rounded-xl py-3 px-4 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all mt-1" placeholder="Contoh: Elektronik, Pakaian">
@@ -325,7 +334,6 @@
 
 @push('scripts')
 <script>
-    // Toggle Filter Panel
     function toggleFilterPanel() {
         const panel = document.getElementById('filterPanel');
         panel.classList.toggle('hidden');
@@ -334,16 +342,10 @@
     function openEditModal(barang) {
         const form = document.getElementById('editForm');
         form.action = `/items/${barang.id}`;
-
-        // Isi Field Modal
         document.getElementById('edit_nama').value = barang.nama_barang;
         document.getElementById('edit_satuan').value = barang.satuan;
         document.getElementById('edit_stok_min').value = barang.stok_minimum;
-
-        {{-- Otomatis panggil nama kategori yang terkait dari objek relasi barang --}}
         document.getElementById('edit_kategori_nama').value = barang.kategori ? barang.kategori.nama : '';
-
-        // Tampilkan Modal
         document.getElementById('modalEditItem').classList.remove('hidden');
     }
 
@@ -351,7 +353,6 @@
         document.getElementById('modalEditItem').classList.add('hidden');
     }
 
-    // Auto-buka filter panel kalau ada filter aktif
     document.addEventListener('DOMContentLoaded', function() {
         const hasActiveFilter = {{ (request()->hasAny(['search', 'status']) || (request('sort') && request('sort') !== 'terbaru')) ? 'true' : 'false' }};
         if (hasActiveFilter) {

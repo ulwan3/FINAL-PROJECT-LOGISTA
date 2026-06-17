@@ -12,17 +12,32 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class DashboardController extends Controller
 {
-   public function index()
+
+    private function totalStokSql()
     {
+        return '(COALESCE(barangs.stok_gudang, 0) + COALESCE(barangs.stok_rak, 0))';
+    }
+
+    public function index()
+    {
+        $totalStokSql = $this->totalStokSql();
+
         $totalBarang = Barang::count();
-        $stokMenipis = Barang::whereColumn('stok', '<=', 'stok_minimum')->count();
-        
+
+        // Hitung stok menipis berdasarkan gabungan gudang & rak
+        $stokMenipis = Barang::whereRaw("$totalStokSql <= barangs.stok_minimum")->count();
+
         // --- LOGIKA KAPASITAS GUDANG ---
-        $kapasitasMaksimal = 1000; 
-        $totalStokSaatIni = Barang::sum('stok');
+        $kapasitasMaksimal = 5000; 
+
+        // Jumlahkan seluruh isi gudang dan rak dari database
+        $totalStokSaatIni = Barang::selectRaw("$totalStokSql as hitung_stok")
+                                ->get()
+                                ->sum('hitung_stok');
+
         $persentaseGudang = max(0, min(($totalStokSaatIni / $kapasitasMaksimal) * 100, 100));
 
-        $today = \Carbon\Carbon::today(); // Pastikan pemanggilan Carbon aman
+        $today = Carbon::today();
         $transaksiHarianMasuk = Transaksi::where('jenis', 'barang_masuk')->whereDate('created_at', $today)->count();
         $transaksiHarianKeluar = Transaksi::where('jenis', 'barang_keluar')->whereDate('created_at', $today)->count();
         $totalTransaksiHarian = $transaksiHarianMasuk + $transaksiHarianKeluar;
@@ -32,29 +47,25 @@ class DashboardController extends Controller
                         ->take(5)
                         ->get();
 
-        $days = collect(range(6, 0))->map(fn($i) => \Carbon\Carbon::now()->subDays($i)->format('Y-m-d'));
-        $labels = $days->map(fn($date) => \Carbon\Carbon::parse($date)->format('D'));
+        $days = collect(range(6, 0))->map(fn($i) => Carbon::now()->subDays($i)->format('Y-m-d'));
+        $labels = $days->map(fn($date) => Carbon::parse($date)->format('D'));
 
         $stok_masuk = $days->map(function($date) {
-            return \App\Models\PemesananBarang::whereDate('created_at', $date)
+            return PemesananBarang::whereDate('created_at', $date)
                 ->where('status', 'diterima') 
                 ->sum('jumlah_pesan') ?? 0;   
         });
 
         $stok_keluar = $days->map(function($date) {
-            return \App\Models\Transaksi::whereDate('created_at', $date)
+            return Transaksi::whereDate('created_at', $date)
                 ->where('jenis', 'keluar') 
                 ->sum('jumlah') ?? 0;
         });
 
         $suppliers = \App\Models\Supplier::all();
 
-        // ==========================================
-        // TARGET 3: Ambil Master Barang untuk Dropdown
-        // ==========================================
-        $barangs = \App\Models\Barang::orderBy('nama_barang', 'asc')->get();
+        $barangs = Barang::orderBy('nama_barang', 'asc')->get();
 
-        // SUNTIKKAN VARIABEL 'barangs' KE DALAM COMPACT BELOW
         return view('dashboard', compact(
             'totalBarang', 
             'stokMenipis', 
@@ -67,35 +78,35 @@ class DashboardController extends Controller
             'stok_masuk',  
             'stok_keluar',
             'suppliers',
-            'barangs' // <-- Variabel baru terdaftar secara sah
+            'barangs',
+            'totalStokSaatIni',
+            'kapasitasMaksimal'
         ));
     }
 
     public function getChartData(Request $request)
     {
-        $filter = $request->get('filter', 'minggu'); // Default minggu jika kosong
+        $filter = $request->get('filter', 'minggu');
         
         if ($filter === 'bulan') {
-            // Ambil data 30 hari terakhir
             $range = range(29, 0);
-            $formatLabel = 'd M'; // Contoh: 14 May
+            $formatLabel = 'd M';
         } else {
-            // Default 7 hari terakhir (Minggu Ini)
             $range = range(6, 0);
-            $formatLabel = 'D'; // Contoh: Mon, Tue
+            $formatLabel = 'D';
         }
 
         $days = collect($range)->map(fn($i) => Carbon::now()->subDays($i)->format('Y-m-d'));
         $labels = $days->map(fn($date) => Carbon::parse($date)->format($formatLabel));
 
         $stok_masuk = $days->map(function($date) {
-            return \App\Models\PemesananBarang::whereDate('created_at', $date)
+            return PemesananBarang::whereDate('created_at', $date)
                 ->where('status', 'diterima') 
                 ->sum('jumlah_pesan') ?? 0;   
         });
 
         $stok_keluar = $days->map(function($date) {
-            return \App\Models\Transaksi::whereDate('created_at', $date)
+            return Transaksi::whereDate('created_at', $date)
                 ->where('jenis', 'keluar') 
                 ->sum('jumlah') ?? 0;
         });
@@ -118,7 +129,6 @@ class DashboardController extends Controller
 
     public function konfirmasi(Request $request, $id)
     {
-        // 1. Validasi input agar data yang masuk konsisten
         $request->validate([
             'status' => 'required|in:sampai,tidak_sesuai',
             'qty_diterima' => 'required|integer|min:0',
@@ -127,10 +137,8 @@ class DashboardController extends Controller
 
         $pesanan = PemesananBarang::findOrFail($id);
 
-        // 2. Gunakan Transaction agar sinkronisasi data aman (All or Nothing)
         DB::transaction(function () use ($request, $pesanan) {
             
-            // Update status di tabel pemesanan
             $pesanan->update([
                 'status' => $request->status,
                 'qty_diterima' => $request->qty_diterima,
@@ -138,20 +146,22 @@ class DashboardController extends Controller
                 'verified_at' => now(),
             ]);
 
-            // 3. LOGIKA OTOMATIS TAMBAH STOK
-            // Hanya diproses jika barang benar-benar sampai
             if ($request->status == 'sampai' && $request->qty_diterima > 0) {
                 $barang = Barang::find($pesanan->barang_id);
                 
                 if ($barang) {
-                    // Update stok utama di tabel Barang
-                    $barang->increment('stok', $request->qty_diterima);
+                    $barang->increment('stok_gudang', $request->qty_diterima);
+
+                    $totalStokBaru = ($barang->stok_gudang ?? 0) + ($barang->stok_rak ?? 0);
+                    $barang->update([
+                        'stok' => $totalStokBaru,
+                        'total_stok' => $totalStokBaru
+                    ]);
                     
-                    // Catat ke tabel Transaksi sebagai bukti arus barang masuk
                     Transaksi::create([
                         'barang_id' => $pesanan->barang_id,
                         'user_id'   => auth()->id(),
-                        'jenis'     => 'masuk',
+                        'jenis'     => 'barang_masuk',
                         'jumlah'    => $request->qty_diterima,
                         'keterangan'=> "Penerimaan pesanan ID #{$pesanan->id}"
                     ]);
@@ -162,20 +172,67 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Barang telah diterima dan stok gudang otomatis diperbarui!');
     }
 
+    /**
+     * EXPORT PDF - VERSI FINAL (LENGKAP DENGAN STOK MASUK & KELUAR)
+     */
     public function exportPDF()
     {
-        // Mengambil data sesuai indikator di image_9232e2.png
+        $totalStokSql = $this->totalStokSql();
+        
+        // Ambil data barang dengan JOIN ke tabel kategoris
+        $barang = Barang::leftJoin('kategoris', 'barangs.kategori_id', '=', 'kategoris.id')
+            ->select(
+                'barangs.*',
+                'kategoris.nama as kategori_nama'
+            )
+            ->get();
+        
+        // Hitung stok aktual dan statistik untuk setiap barang
+        foreach ($barang as $item) {
+            // Stok aktual = stok_gudang + stok_rak
+            $item->stok = ($item->stok_gudang ?? 0) + ($item->stok_rak ?? 0);
+            
+            // Hitung total stok masuk dari transaksi (jenis: barang_masuk)
+            $masuk = Transaksi::where('barang_id', $item->id)
+                ->where('jenis', 'barang_masuk')
+                ->sum('jumlah');
+            $item->total_stok_masuk = $masuk ?? 0;
+            
+            // Hitung total stok keluar dari transaksi (jenis: barang_keluar)
+            $keluar = Transaksi::where('barang_id', $item->id)
+                ->where('jenis', 'barang_keluar')
+                ->sum('jumlah');
+            $item->total_stok_keluar = $keluar ?? 0;
+            
+            // Jika kategori_nama masih kosong (fallback)
+            if (empty($item->kategori_nama)) {
+                $item->kategori_nama = '-';
+            }
+        }
+        
+        // Hitung total stok keseluruhan
+        $total_stok = $barang->sum('stok');
+        
+        // Hitung stok habis (stok = 0)
+        $stok_habis = $barang->filter(fn($item) => $item->stok <= 0)->count();
+        
+        // Hitung stok menipis (stok > 0 dan <= stok_minimum)
+        $stok_menipis = Barang::whereRaw("$totalStokSql <= barangs.stok_minimum")
+            ->whereRaw("$totalStokSql > 0")
+            ->count();
+        
+        // Siapkan data untuk view PDF
         $data = [
-            'tanggal' => now()->format('d F Y, H:i'),
-            'total_barang' => \App\Models\Barang::count(),
-            'stok_menipis' => \App\Models\Barang::whereColumn('stok', '<=', 'stok_minimum')->count(),
-            'kapasitas' => 22, // Contoh statis sesuai gambar, bisa diganti logika dinamis
-            'aktivitas' => \App\Models\PemesananBarang::with('barang')->latest()->take(10)->get()
+            'tanggal'       => now()->format('d F Y, H:i'),
+            'total_stok'    => $total_stok,
+            'total_barang'  => Barang::count(),
+            'stok_menipis'  => $stok_menipis,
+            'stok_habis'    => $stok_habis,
+            'barang'        => $barang,
         ];
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.dashboard_pdf', $data);
-        
-        // Download file dengan nama otomatis
+        // Generate dan download PDF
+        $pdf = Pdf::loadView('exports.dashboard_pdf', $data);
         return $pdf->download('Laporan_Gudang_Logista.pdf');
     }
 }

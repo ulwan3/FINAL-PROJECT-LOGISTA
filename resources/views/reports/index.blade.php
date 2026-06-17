@@ -29,9 +29,6 @@
                 <span class="font-display text-[32px] text-on-surface leading-none">{{ number_format($masuk) }}</span>
                 <span class="text-body-sm text-on-surface-variant">Unit</span>
             </div>
-            <p class="text-[12px] text-green-400 mt-2 flex items-center gap-1 font-bold">
-                <span class="material-symbols-outlined text-[14px]">trending_up</span> +15% dari bulan lalu
-            </p>
         </div>
 
         <div class="glass-panel p-lg rounded-xl border-t-2 border-secondary">
@@ -40,9 +37,6 @@
                 <span class="font-display text-[32px] text-on-surface leading-none">{{ number_format($keluar) }}</span>
                 <span class="text-body-sm text-on-surface-variant">Unit</span>
             </div>
-            <p class="text-[12px] text-error mt-2 flex items-center gap-1 font-bold">
-                <span class="material-symbols-outlined text-[14px]">trending_down</span> -5% dari bulan lalu
-            </p>
         </div>
 
         <div class="glass-panel p-lg rounded-xl border-t-2 border-tertiary">
@@ -51,25 +45,23 @@
                 <span class="font-display text-[32px] text-on-surface leading-none">14</span>
                 <span class="text-body-sm text-on-surface-variant">Hari</span>
             </div>
-            <p class="text-[12px] text-on-surface-variant mt-2 font-medium">Lebih cepat 2 hari dari target</p>
         </div>
     </div>
 
-    <div class="glass-panel p-lg rounded-xl flex flex-col mb-lg">
-        <div class="flex justify-between items-center mb-md">
-            <h3 class="font-headline-sm text-on-surface">Grafik Barang Masuk vs Keluar (30 Hari Terakhir)</h3>
-        </div>
-        @if($totalTransaksi == 0)
-            <div class="flex flex-col items-center justify-center h-[250px] text-on-surface-variant">
-                <span class="material-symbols-outlined text-[60px] mb-4">bar_chart</span>
-                <p class="text-center">Belum ada data transaksi.</p>
-            </div>
-        @else
-            <div class="w-full h-[250px]">
-                <canvas id="stockChart"></canvas>
-            </div>
-        @endif
+    <div class="glass-panel p-lg rounded-xl flex flex-col mb-lg w-full"> <div class="flex justify-between items-center mb-md">
+        <h3 class="font-headline-sm text-on-surface">Grafik Barang Masuk vs Keluar (30 Hari Terakhir)</h3>
     </div>
+    @if($totalTransaksi == 0)
+        <div class="flex flex-col items-center justify-center h-[320px] text-on-surface-variant">
+            <span class="material-symbols-outlined text-[60px] mb-4">bar_chart</span>
+            <p class="text-center">Belum ada data transaksi.</p>
+        </div>
+    @else
+        <div class="w-full h-[320px] relative">
+            <canvas id="stockChart"></canvas>
+        </div>
+    @endif
+</div>
 
     <div class="glass-panel p-lg rounded-xl">
         <div class="flex items-center gap-2 mb-md">
@@ -121,12 +113,10 @@
                 <div class="text-center">
                     <p class="text-on-surface-variant text-sm">Barang Masuk</p>
                     <p class="text-primary font-bold text-3xl">{{ number_format($masuk) }}</p>
-                    <p class="text-green-400 text-xs">+15%</p>
                 </div>
                 <div class="text-center">
                     <p class="text-on-surface-variant text-sm">Barang Keluar</p>
                     <p class="text-secondary font-bold text-3xl">{{ number_format($keluar) }}</p>
-                    <p class="text-error text-xs">-5%</p>
                 </div>
             </div>
         </div>

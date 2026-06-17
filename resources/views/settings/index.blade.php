@@ -1,94 +1,292 @@
 @extends('layouts.app')
 
-@section('header_action')
-<button class="bg-primary text-on-primary font-label-bold px-lg py-2 rounded-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_15px_rgba(207,188,255,0.2)]">
-    Simpan Perubahan
-</button>
-@endsection
+@section('title', 'Settings - Logista')
 
 @section('content')
-<section class="flex flex-col gap-sm mb-md">
-    <h2 class="font-headline-md text-on-surface">Pengaturan Sistem</h2>
-    <p class="font-body-sm text-on-surface-variant">Konfigurasi profil pengguna, preferensi aplikasi, dan manajemen hak akses.</p>
-</section>
-
-<div class="grid grid-cols-1 md:grid-cols-4 gap-lg">
-    <!-- Settings Sidebar -->
-    <div class="md:col-span-1 flex flex-col gap-sm">
-        <button class="flex items-center gap-md px-md py-3 rounded-xl bg-primary-container text-on-primary-container font-bold transition-all w-full text-left">
-            <span class="material-symbols-outlined">person</span>
-            Profil Saya
-        </button>
-        <button class="flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all w-full text-left border border-transparent">
-            <span class="material-symbols-outlined">tune</span>
-            Preferensi Sistem
-        </button>
-        <button class="flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all w-full text-left border border-transparent">
-            <span class="material-symbols-outlined">notifications</span>
-            Pemberitahuan
-        </button>
-        <button class="flex items-center gap-md px-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-all w-full text-left border border-transparent">
-            <span class="material-symbols-outlined">security</span>
-            Keamanan & Akses
-        </button>
+<div class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-white">Settings</h1>
+        <p class="text-gray-400 text-sm mt-1">Pengaturan sistem & akun pengguna</p>
     </div>
 
-    <!-- Settings Content Area -->
-    <div class="md:col-span-3 glass-panel p-lg rounded-2xl flex flex-col gap-lg min-h-[500px]">
-        
-        <!-- Profile Section -->
-        <div>
-            <h3 class="font-headline-sm text-on-surface mb-lg pb-3 border-b border-outline-variant/30">Informasi Pribadi</h3>
-            <div class="flex flex-col lg:flex-row items-start gap-xl">
-                <!-- Avatar Upload -->
-                <div class="flex flex-col items-center gap-sm shrink-0">
-                    <div class="w-32 h-32 rounded-full bg-surface-container-highest border-2 border-primary/50 flex items-center justify-center text-primary relative group cursor-pointer overflow-hidden shadow-lg">
-                        <span class="material-symbols-outlined text-[50px]">account_circle</span>
-                        <div class="absolute inset-0 bg-surface/60 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span class="material-symbols-outlined text-on-surface">photo_camera</span>
-                        </div>
-                    </div>
-                    <span class="text-xs text-on-surface-variant uppercase tracking-wider font-bold mt-2 hover:text-primary cursor-pointer transition-colors">Ubah Foto</span>
-                </div>
-
-                <!-- Profile Form -->
-                <div class="flex-1 w-full grid grid-cols-1 md:grid-cols-2 gap-lg">
-                    <div class="flex flex-col gap-2">
-                        <label class="font-label-bold text-on-surface-variant uppercase tracking-wider text-xs">Nama Lengkap</label>
-                        <input type="text" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl py-3 px-4 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all" value="{{ $user->name ?? 'Admin Logista' }}">
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="font-label-bold text-on-surface-variant uppercase tracking-wider text-xs">Username ID</label>
-                        <input type="text" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl py-3 px-4 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all" value="{{ $user->username ?? 'admin_01' }}">
-                    </div>
-                    <div class="flex flex-col gap-2 md:col-span-2">
-                        <label class="font-label-bold text-on-surface-variant uppercase tracking-wider text-xs">Alamat Email</label>
-                        <input type="email" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl py-3 px-4 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all" value="{{ $user->email ?? 'admin@logista.com' }}">
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label class="font-label-bold text-on-surface-variant uppercase tracking-wider text-xs">Peran (Role)</label>
-                        <input type="text" class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl py-3 px-4 text-primary font-bold font-body-md cursor-not-allowed uppercase opacity-80" value="{{ $user->role ?? 'ADMIN' }}" readonly>
-                        <span class="text-[11px] text-on-surface-variant mt-1 italic">Hanya Super Admin yang dapat mengubah role.</span>
-                    </div>
-                </div>
-            </div>
+    <!-- Alert Messages dari Laravel -->
+    @if(session('success'))
+        <div class="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-400 text-sm">
+            {{ session('success') }}
         </div>
+    @endif
+    
+    @if(session('error'))
+        <div class="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
+            {{ session('error') }}
+        </div>
+    @endif
 
-        <!-- Security / Password Section -->
-        <div class="mt-xl pt-lg border-t border-outline-variant/20">
-            <h3 class="font-headline-sm text-on-surface mb-lg pb-3 border-b border-outline-variant/30">Ubah Kata Sandi</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-lg">
-                <div class="flex flex-col gap-2">
-                    <label class="font-label-bold text-on-surface-variant uppercase tracking-wider text-xs">Sandi Lama</label>
-                    <input type="password" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl py-3 px-4 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all" placeholder="••••••••">
-                </div>
-                <div class="flex flex-col gap-2">
-                    <label class="font-label-bold text-on-surface-variant uppercase tracking-wider text-xs">Sandi Baru</label>
-                    <input type="password" class="w-full bg-surface-container border border-outline-variant/30 rounded-xl py-3 px-4 text-on-surface font-body-md focus:border-primary focus:ring-1 focus:ring-primary/50 outline-none transition-all" placeholder="••••••••">
-                </div>
-            </div>
+    <!-- Container untuk AJAX Messages -->
+    <div id="ajax-message-container" class="mb-4"></div>
+
+    <!-- HANYA KEAMANAN & AKSES - TANPA TAB PROFIL -->
+    
+    <!-- Operator Dionic -->
+    <div class="bg-[#1c1515] rounded-xl border border-[#4d3535]/40 p-6 mt-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-semibold text-white">Operator</h2>
+            <span class="text-xs text-gray-400 bg-[#2b2020] px-2 py-1 rounded-full">
+                Total: <span id="total-operators">{{ $operators->count() }}</span>
+            </span>
         </div>
         
+        <div class="text-sm text-gray-400 mb-4 bg-[#2b2020]/50 p-2 rounded-lg">
+            ℹ️ Status Online/Offline otomatis berdasarkan aktivitas terakhir operator di aplikasi.
+        </div>
+        
+        @if($operators->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-[#4d3535]/40">
+                            <th class="text-left py-3 px-3 text-gray-400 font-medium">NAMA</th>
+                            <th class="text-left py-3 px-3 text-gray-400 font-medium">USERNAME</th>
+                            <th class="text-left py-3 px-3 text-gray-400 font-medium">STATUS</th>
+                            <th class="text-left py-3 px-3 text-gray-400 font-medium">AKSES</th>
+                            <th class="text-left py-3 px-3 text-gray-400 font-medium">AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($operators as $operator)
+                        <tr id="operator-row-{{ $operator->id }}" class="border-b border-[#4d3535]/30 hover:bg-[#2b2020]/30 transition-colors">
+                            <td class="py-3 px-3 text-white font-medium">{{ $operator->name }}</td>
+                            <td class="py-3 px-3 text-gray-400">{{ $operator->username ?? '-' }}</td>
+                            <td class="py-3 px-3 status-cell">
+                                @if($operator->isOnline())
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="relative flex h-2 w-2">
+                                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                                        </span>
+                                        <span class="text-green-400 text-xs">Online</span>
+                                        @if($operator->last_seen_at)
+                                            <span class="text-gray-500 text-xs">({{ \Carbon\Carbon::parse($operator->last_seen_at)->diffForHumans() }})</span>
+                                        @endif
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="w-2 h-2 bg-gray-500 rounded-full"></span>
+                                        <span class="text-gray-400 text-xs">Offline</span>
+                                        @if($operator->last_seen_at)
+                                            <span class="text-gray-500 text-xs">({{ \Carbon\Carbon::parse($operator->last_seen_at)->diffForHumans() }})</span>
+                                        @endif
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-3">
+                                @if($operator->is_active)
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                        <span class="text-blue-400 text-xs">Akses Diizinkan</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                                        <span class="text-red-400 text-xs">Akses Diblokir</span>
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-3 px-3 action-cell">
+                                <div class="flex items-center gap-3">
+                                    @if($operator->is_active)
+                                        <button onclick="toggleOperatorActive({{ $operator->id }}, 'nonaktifkan')" 
+                                            class="text-red-400 hover:text-red-300 text-xs font-medium transition-colors">
+                                            blokir akses
+                                        </button>
+                                    @else
+                                        <button onclick="toggleOperatorActive({{ $operator->id }}, 'aktifkan')" 
+                                            class="text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors">
+                                            izinkan akses
+                                        </button>
+                                    @endif
+                                    
+                                    <button onclick="deleteOperator({{ $operator->id }}, '{{ $operator->name }}')" 
+                                        class="text-red-400 hover:text-red-300 text-xs transition-colors">
+                                        🗑️ hapus
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 pt-4 border-t border-[#4d3535]/30">
+                <button onclick="deactivateAllOperators()" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-all duration-200 flex items-center gap-2">
+                    <span class="text-sm">🔒</span>
+                    Blokir akses semua operator
+                </button>
+            </div>
+        @else
+            <div class="text-center py-12">
+                <span class="material-symbols-outlined text-5xl text-gray-500 mb-3">people</span>
+                <p class="text-gray-400">Belum ada operator terdaftar.</p>
+                <p class="text-gray-500 text-sm mt-1">Tambahkan user dengan role "operator" untuk mulai mengelola.</p>
+            </div>
+        @endif
     </div>
 </div>
+
+<script>
+    // Tampilkan pesan di container
+    function showAjaxMessage(message, type) {
+        const container = document.getElementById('ajax-message-container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `p-3 rounded-lg text-sm ${
+            type === 'success' 
+                ? 'bg-green-500/20 border border-green-500/50 text-green-400' 
+                : 'bg-red-500/20 border border-red-500/50 text-red-400'
+        }`;
+        alertDiv.innerHTML = message;
+        
+        container.appendChild(alertDiv);
+        
+        setTimeout(() => {
+            alertDiv.style.opacity = '0';
+            setTimeout(() => {
+                if (alertDiv.parentNode) alertDiv.remove();
+            }, 300);
+        }, 3000);
+    }
+    
+    // Toggle operator active status
+    function toggleOperatorActive(operatorId, action) {
+        if (!confirm('Yakin ingin ' + action + ' akses operator ini?')) return;
+        
+        fetch('/settings/operator/' + operatorId + '/toggle-active', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.getElementById('operator-row-' + operatorId);
+                const aksesCell = row.querySelector('td:nth-child(4)');
+                const actionCell = row.querySelector('.action-cell');
+                const operatorName = row.querySelector('td:first-child')?.innerText || 'Operator';
+                
+                if (data.is_active) {
+                    aksesCell.innerHTML = `
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span class="text-blue-400 text-xs">Akses Diizinkan</span>
+                        </span>
+                    `;
+                    actionCell.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleOperatorActive(${operatorId}, 'nonaktifkan')" class="text-red-400 hover:text-red-300 text-xs font-medium">blokir akses</button>
+                            <button onclick="deleteOperator(${operatorId}, '${operatorName}')" class="text-red-400 hover:text-red-300 text-xs">🗑️ hapus</button>
+                        </div>
+                    `;
+                    showAjaxMessage('Operator "' + operatorName + '" berhasil diizinkan aksesnya.', 'success');
+                } else {
+                    aksesCell.innerHTML = `
+                        <span class="inline-flex items-center gap-1.5">
+                            <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+                            <span class="text-red-400 text-xs">Akses Diblokir</span>
+                        </span>
+                    `;
+                    actionCell.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleOperatorActive(${operatorId}, 'aktifkan')" class="text-blue-400 hover:text-blue-300 text-xs font-medium">izinkan akses</button>
+                            <button onclick="deleteOperator(${operatorId}, '${operatorName}')" class="text-red-400 hover:text-red-300 text-xs">🗑️ hapus</button>
+                        </div>
+                    `;
+                    showAjaxMessage('Operator "' + operatorName + '" berhasil diblokir aksesnya.', 'success');
+                }
+            } else {
+                showAjaxMessage(data.message || 'Terjadi kesalahan.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxMessage('Terjadi kesalahan. Periksa koneksi atau coba lagi.', 'error');
+        });
+    }
+    
+    // Delete operator
+    function deleteOperator(operatorId, operatorName) {
+        if (!confirm(`Hapus operator "${operatorName}"?\n\nData transaksinya tetap tersimpan.`)) {
+            return;
+        }
+        
+        fetch('/settings/operator/' + operatorId + '/delete', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const row = document.getElementById('operator-row-' + operatorId);
+                if (row) row.remove();
+                
+                const totalSpan = document.getElementById('total-operators');
+                if (totalSpan) {
+                    totalSpan.innerText = parseInt(totalSpan.innerText) - 1;
+                }
+                
+                showAjaxMessage(data.message, 'success');
+                
+                if (document.querySelectorAll('#operators-table tbody tr').length === 0) {
+                    location.reload();
+                }
+            } else {
+                showAjaxMessage(data.message || 'Gagal menghapus operator.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxMessage('Terjadi kesalahan saat menghapus.', 'error');
+        });
+    }
+    
+    // Blokir akses semua operator
+    function deactivateAllOperators() {
+        if (!confirm('Yakin ingin memblokir akses SEMUA operator?')) return;
+        
+        fetch('{{ route("settings.operator.deactivateAll") }}', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAjaxMessage(data.message, 'success');
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+            } else {
+                showAjaxMessage(data.message || 'Gagal memblokir operator.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAjaxMessage('Terjadi kesalahan.', 'error');
+        });
+    }
+</script>
 @endsection
