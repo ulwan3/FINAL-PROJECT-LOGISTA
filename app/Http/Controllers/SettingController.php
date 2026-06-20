@@ -30,7 +30,7 @@ class SettingController extends Controller
             $operator->is_online = false;
             if ($operator->last_seen_at) {
                 $lastSeen = Carbon::parse($operator->last_seen_at);
-                $operator->is_online = $lastSeen->diffInMinutes(now()) <= 5;
+                $operator->is_online = $lastSeen->diffInSeconds(now()) <= 5;
             }
         }
         

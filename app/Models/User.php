@@ -80,6 +80,6 @@ class User extends Authenticatable
             return false;
         }
         $lastSeen = \Carbon\Carbon::parse($this->last_seen_at);
-        return $lastSeen->diffInMinutes(now()) <= 5;
+        return $lastSeen->diffInSeconds(now()) <= 5;
     }
 }
